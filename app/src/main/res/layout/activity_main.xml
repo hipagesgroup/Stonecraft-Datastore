@@ -1,0 +1,78 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:orientation="vertical"
+    tools:context=".MainActivity" >
+
+    <TextView
+        android:id="@+id/txbStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Connection closed" />
+    />
+
+    <Button
+        android:id="@+id/btnConnect"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Connect" />
+
+    <Button
+        android:id="@+id/btnClose"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Close DB" />
+
+    <Button
+        android:id="@+id/btnReconnect"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Reconnect" />
+
+    <Button
+        android:id="@+id/btnCheck"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Check" />
+
+    <Button
+        android:id="@+id/btnInsert"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Insert" />
+
+    <Button
+        android:id="@+id/btnPhoto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Add Photo" />
+
+    <Button
+        android:id="@+id/btnQueryDataMap"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Query Table Data Map" />
+    <Button
+        android:id="@+id/btnCopyDB"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Copy DB" />
+
+    <Button
+        android:id="@+id/btnDisplay"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Display Photo" />
+
+    <ImageView
+        android:id="@+id/imgPhoto"
+        android:layout_width="match_parent"
+        android:layout_height="fill_parent"
+        />
+
+</LinearLayout>

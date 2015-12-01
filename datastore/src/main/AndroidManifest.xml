@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="au.com.fairfaxdigital.common.database.datastore">
+    package="au.com.stonecraft.common.database.datastore">
 
     <application android:allowBackup="true">
 

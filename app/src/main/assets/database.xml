@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Schema>
+	<Name>Domain</Name>
+	<Version>8</Version>
+	<Tables>
+		<Table uri="content://com.delaney.shortlist">
+			<Name>SHORT_LIST</Name>
+			<Columns>
+				<Column>
+					<Name>PROPERTY_ID</Name>
+					<Type length="9">Integer</Type>
+					<Primary>True</Primary>
+					<Nullable>False</Nullable>
+				</Column>
+				<Column>
+					<Name>IS_FAVOURITE</Name>
+					<Type length="9">Integer</Type>
+					<Primary>False</Primary>
+					<AutoIncrement>False</AutoIncrement>
+					<Nullable>False</Nullable>
+				</Column>
+				<Column>
+					<Name>PROPERTY_ADDRESS</Name>
+					<Type length="256">String</Type>
+					<Primary>False</Primary>
+					<AutoIncrement>False</AutoIncrement>
+					<Nullable>True</Nullable>
+				</Column>
+				<Column>
+					<Name>PROPERTY_POSTCODE</Name>
+					<Type length="4">Integer</Type>
+					<Primary>False</Primary>
+					<AutoIncrement>False</AutoIncrement>
+					<Nullable>True</Nullable>
+				</Column>
+				 <!-- <Column>
+					<Name>Latitude</Name>
+					<Type length="4">Integer</Type>
+					<Primary>False</Primary>
+					<AutoIncrement>False</AutoIncrement>
+					<Nullable>True</Nullable>
+				</Column>
+				<Column>
+					<Name>LONGITUDE</Name>
+					<Type length="4">Integer</Type>
+					<Primary>False</Primary>
+					<AutoIncrement>False</AutoIncrement>
+					<Nullable>True</Nullable>
+				</Column>
+				<Column>
+					<Name>DESCRIPTION</Name>
+					<Type length="4">Integer</Type>
+					<Primary>False</Primary>
+					<AutoIncrement>False</AutoIncrement>
+					<Nullable>True</Nullable>
+				</Column> -->
+			</Columns>
+		</Table>
+		<Table uri="content://com.delaney.photos">
+			<Name>PHOTO_GALLERY</Name>
+			<Columns>
+				<Column>
+					<Name>IMAGE_ID</Name>
+					<Type length="9">Integer</Type>
+					<Primary>True</Primary>
+					<AutoIncrement>True</AutoIncrement>
+					<Nullable>False</Nullable>
+				</Column>
+				<Column>
+					<Name>PHOTO_DATA</Name>
+					<Type length="0">Blob</Type>
+					<Primary>False</Primary>
+					<AutoIncrement>False</AutoIncrement>
+					<Nullable>False</Nullable>
+				</Column>
+			</Columns>
+		</Table>
+	</Tables>
+</Schema>

@@ -21,7 +21,6 @@ import au.com.stonecraft.common.database.interfaces.OnQueryComplete;
 class DatabaseQueryTask extends DatabaseTask {
 	private Statement myQuery;
 	private OnQueryComplete myQueryListener;
-	private RSData myResult;
 	private Class myInjectorClass;
 
 	public DatabaseQueryTask(int taskId, int token, IDBConnector conn,
@@ -98,7 +97,7 @@ class DatabaseQueryTask extends DatabaseTask {
 
 		Object[] result = null;
 		if(myQueryListener != null) {
-			myQueryListener.parseData(myResult);
+			result = myQueryListener.parseData(data);
 		}
 		if(result == null) {
             return new DatabaseObjectInjector().inject(data, classOfT);
@@ -118,36 +117,4 @@ class DatabaseQueryTask extends DatabaseTask {
 	public void setOnQueryCompleteListener(OnQueryComplete listener) {
 		myQueryListener = listener;
 	}
-
-	/**
-	 * This method returns the number of records that were
-	 * updated/deleted/inserted in this task. executeTask() should be called
-	 * before this method is called. null will be returned otherwise.
-	 * 
-	 * @return
-	 */
-	public RSData getTaskResult() {
-		return myResult;
-	}
-
-	private <T> T[] getInjectedObjects(Class<T> classToInject) throws DatabaseException {
-		RSData data = null;
-		if (myQuery instanceof Query) {
-			data = myConnection.query((Query)myQuery);
-		} else if (myQuery instanceof RawSQLQuery) {
-			data = myConnection.executeRawQuery((((RawSQLQuery)myQuery)).getQuery());
-		}
-		else {
-			throw new DatabaseException("Unknown statement type "
-					+ myQuery.getClass().getSimpleName()
-					+ ". Must be either " + Query.class.getSimpleName()
-					+ " or " + RawSQLQuery.class.getSimpleName());
-		}
-
-
-		T[] returnList = new DatabaseObjectInjector().inject(data, classToInject);
-		data.close();
-		return returnList;
-	}
-
 }

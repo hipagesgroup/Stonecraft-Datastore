@@ -16,6 +16,7 @@ import au.com.stonecraft.common.database.exceptions.DatabaseException;
 public abstract class DatabaseColumn {
 	public static final String PRIMARY_KEY = "PRIMARY KEY";
 	public static final String NOT_NULL = "NOT NULL";
+	public static final String DEFAULT = "DEFAULT";
 	public static final String AUTO_INCREMENT = "AUTOINCREMENT";
 
 	private String myName;
@@ -24,6 +25,7 @@ public abstract class DatabaseColumn {
 	private boolean myIsAutoIncrement;
 	private boolean myIsNullable;
 	private int myLength;
+	private String myDefaultValue;
 
 	/**
 	 * This constructor represents a database column that is non-nullable, is
@@ -152,6 +154,14 @@ public abstract class DatabaseColumn {
 		}
 		
 		return false;
+	}
+
+	public void setDefaultValue(String defaultValue) {
+		myDefaultValue = defaultValue;
+	}
+
+	public String getDefaultValue() {
+		return myDefaultValue;
 	}
 
 	/**

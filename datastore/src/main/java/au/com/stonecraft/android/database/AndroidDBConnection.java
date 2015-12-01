@@ -1,7 +1,9 @@
 package au.com.stonecraft.android.database;
 
+import java.io.ByteArrayOutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -15,6 +17,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
+import android.graphics.Bitmap;
 import android.net.Uri;
 
 import au.com.stonecraft.common.database.DBConstants;
@@ -130,7 +133,7 @@ public class AndroidDBConnection implements IDBConnector {
 		if(insert.getInsertRowClasses() != null) {
 			cv = getContentValues(insert.getInsertRowClasses());
 		} else {
-			cv = getContentValues(insert.getValues());
+			cv = getContentValues(insert.getValues().entrySet());
 		}
 
 		SQLiteDatabase db = myDBOpenHelper.getWritableDatabase();
@@ -375,6 +378,13 @@ public class AndroidDBConnection implements IDBConnector {
                 cv.put(columnName, timeInMillis);
             } else if(value instanceof byte[]) {
                 cv.put(columnName, (byte[]) value);
+			} else if(value instanceof Bitmap) {
+				Bitmap bmp = (Bitmap)value;
+				ByteArrayOutputStream stream = new ByteArrayOutputStream();
+				bmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
+				byte[] byteArray = stream.toByteArray();
+
+				cv.put(columnName, byteArray);
             }  else if(value instanceof Uri) {
 				cv.put(columnName, value.toString());
 			}
@@ -604,6 +614,12 @@ public class AndroidDBConnection implements IDBConnector {
 		public double getDoubleValue(String column) throws DatabaseException {
 			int colIndex = getCursorIndex(column);
 			return myCursor.getDouble(colIndex);
+		}
+
+		@Override
+		public float getFloatValue(String column) throws DatabaseException {
+			int colIndex = getCursorIndex(column);
+			return myCursor.getFloat(colIndex);
 		}
 
 		@Override

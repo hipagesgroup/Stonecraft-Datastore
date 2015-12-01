@@ -20,7 +20,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -192,6 +194,45 @@ public class MainActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        Uri selectedImageUri = data.getData();
+        InputStream imageStream = null;
+        try {
+            imageStream = getContentResolver().openInputStream(selectedImageUri);
+            Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
+
+            Map<String, Object> row = new HashMap<>();
+            row.put("PHOTO_DATA", selectedImage);
+            Insert insert = new Insert("PHOTO_GALLERY", row);
+
+            Datastore.getDataStore(DB_NAME).executeNonQuery(1, insert, new OnNonQueryComplete() {
+                @Override
+                public void onNonQueryComplete(int token, int updated) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            myTxbStatus.setText("Photo added Successfully");
+                        }
+                    });
+                }
+
+                @Override
+                public void onNonQueryFailed(int token, DatabaseException e) {
+
+                }
+            });
+
+
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+    }
+
     private void copyDB() {
         try{
             File extStore = new File(Environment.getExternalStorageDirectory(), "Datastore");
@@ -207,9 +248,42 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+    private void query() {
+        Datastore ds = Datastore.getDataStore(DB_NAME);
+        Query query = new Query("SHORT_LIST");
+
+        try{
+
+            RSData rsdata = ds.executeQuery(query, RSData.class)[0];
+            myTxbStatus.setText("Datamap record count " + rsdata.getCount());
+            final int count = rsdata.getCount();
+            rsdata.close();
+            ds.executeQuery(0, query, new OnQueryComplete<Shortlist>() {
+
+                @Override
+                public void onQueryComplete(int token, Shortlist[] resultSet) {
+                    Log.d("TEST",
+                            "Query count = " + count + " inject data count = " + resultSet.length);
+                    for (Shortlist shortlist : resultSet) {
+                        Log.d("TEST", "Test default = " + shortlist.getPostcode());
+                    }
+                }
+
+                @Override
+                public void onQueryFailed(int token, DatabaseException e) {
+
+                }
+            });
+        }
+        catch(DatabaseException e){
+            myTxbStatus.setText("Query failed");
+            Log.e("MainActivity", "Query failed [" + e + "]");
+        }
+    }
+
     private void displayPhoto() {
         Query query = new Query("PHOTO_GALLERY");
-            query.orderBy("IMAGE_ID desc");
+//            query.orderBy("IMAGE_ID desc");
 
         Datastore ds = Datastore.getDataStore(DB_NAME);
         ds.executeQuery(0, query, new OnQueryComplete<Bitmap>() {
@@ -233,9 +307,14 @@ public class MainActivity extends AppCompatActivity
             }
 
             @Override
-            public void onQueryComplete(int token, Bitmap[] bitmap) {
-                ImageView imgDisplay = (ImageView) findViewById(R.id.imgPhoto);
-                imgDisplay.setImageBitmap(bitmap[0]);
+            public void onQueryComplete(int token, final Bitmap[] items) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ImageView imgDisplay = (ImageView) findViewById(R.id.imgPhoto);
+                        imgDisplay.setImageBitmap(items[0]);
+                    }
+                });
             }
 
             @Override
@@ -381,35 +460,6 @@ public class MainActivity extends AppCompatActivity
                     returnHandler.sendEmptyMessage(1);
                 }
             }).start();
-        }
-    }
-
-    private void query() {
-        Datastore ds = Datastore.getDataStore(DB_NAME);
-        Query query = new Query("SHORT_LIST");
-
-        try{
-
-            RSData rsdata = ds.executeQuery(query, RSData.class)[0];
-			myTxbStatus.setText("Datamap record count " + rsdata.getCount());
-            final int count = rsdata.getCount();
-            rsdata.close();
-            ds.executeQuery(0, query, new OnQueryComplete<Shortlist>() {
-
-                @Override
-                public void onQueryComplete(int token, Shortlist[] resultSet) {
-                    Log.d("TEST", "Query count = " + count + " inject data count = " + resultSet.length);
-                }
-
-                @Override
-                public void onQueryFailed(int token, DatabaseException e) {
-
-                }
-            });
-        }
-        catch(DatabaseException e){
-			myTxbStatus.setText("Query failed");
-            Log.e("MainActivity", "Query failed [" + e + "]");
         }
     }
 

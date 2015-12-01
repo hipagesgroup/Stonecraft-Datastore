@@ -3,6 +3,9 @@
  */
 package au.com.stonecraft.common.database;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -42,6 +45,7 @@ public class DatabaseObjectInjector {
 				returnClasses[count] = injectedRow;
 			}
 			data.next();
+			count++;
 		}
 		
 		return returnClasses;
@@ -69,14 +73,16 @@ public class DatabaseObjectInjector {
 					DbColumnName InjectAnnotation = (DbColumnName) annotation;
 					String column = InjectAnnotation.value();
 					Class fieldType = field.getType();
-					
+
 					if(data.hasColumn(column)) {
-						if(fieldType == Integer.TYPE) {
+						if(fieldType == Integer.TYPE || fieldType == Integer.class) {
 							field.set(rowClass, data.getIntValue(column));
-						} else if (fieldType == Boolean.TYPE) {
+						} else if (fieldType == Boolean.TYPE || fieldType == Boolean.class) {
 							field.set(rowClass, data.getBooleanValue(column));
-						} else if (fieldType == Double.TYPE) {
+						} else if (fieldType == Double.TYPE || fieldType == Double.class) {
 							field.set(rowClass, data.getDoubleValue(column));
+						} else if (fieldType == Float.TYPE || fieldType == Float.class) {
+								field.set(rowClass, data.getFloatValue(column));
 						} else if (fieldType == String.class) {
 							field.set(rowClass, data.getStringValue(column));
 						} else if (fieldType == Calendar.class) {
@@ -85,6 +91,10 @@ public class DatabaseObjectInjector {
 							field.set(rowClass, data.getDateValue(column));
 						} else if (fieldType == Byte[].class) {
 							field.set(rowClass, data.getBlobData(column));
+						} else if (fieldType == Bitmap.class) {
+							byte[] bmpData = data.getBlobData(column);
+							Bitmap bmp = BitmapFactory.decodeByteArray(bmpData, 0, bmpData.length);
+							field.set(rowClass, bmp);
 						}
 					}
 				}

@@ -1,5 +1,9 @@
 package au.com.stonecraft.common.database.view;
 
+import android.text.TextUtils;
+
+import org.w3c.dom.Text;
+
 import au.com.stonecraft.common.database.DBConstants;
 import au.com.stonecraft.common.database.exceptions.DatabaseException;
 import au.com.stonecraft.common.database.utils.StringUtils;
@@ -85,11 +89,23 @@ public class SQLiteColumn extends DatabaseColumn {
 	public String getCreateColumnStmt(boolean hasTableCompositeKey)
 			throws DatabaseException {
 		StringBuilder builder = new StringBuilder();
-		builder.append(getName()).append(" ").append(getTypeString())
+		String type = getTypeString();
+		builder.append(getName()).append(" ").append(type)
 				.append(" ");
 
-		if (!isPrimarykey() && !isNullable()) {
-			builder.append(NOT_NULL).append(" ");
+		if(!isPrimarykey()) {
+			if (!isNullable()) {
+				builder.append(NOT_NULL).append(" ");
+			}
+			if(!TextUtils.isEmpty(getDefaultValue())) {
+				builder.append(DEFAULT).append(" ");
+					if(type.equals(DATATYPE_TEXT)) {
+						builder.append("'").append(getDefaultValue()).append("'");
+					} else {
+						builder.append(getDefaultValue());
+					}
+					builder.append(" ");
+			}
 		}
 
 		if (!hasTableCompositeKey && isPrimarykey()) {

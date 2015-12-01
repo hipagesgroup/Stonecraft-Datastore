@@ -90,6 +90,17 @@ public interface RSData extends Iterator<RSData> {
 	public double getDoubleValue(String column) throws DatabaseException;
 
 	/**
+	 * Returns the value of the specified column as an float
+	 *
+	 * If the value cannot be represented as a float a DatabaseException will
+	 * be thrown
+	 *
+	 * @param column
+	 * @return
+	 */
+	public float getFloatValue(String column) throws DatabaseException;
+
+	/**
 	 * Returns the value of the specified column as a Date object
 	 * 
 	 * If the columns data type is not a Date a DatabaseException will be thrown

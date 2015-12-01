@@ -32,6 +32,7 @@
 					<Primary>False</Primary>
 					<AutoIncrement>False</AutoIncrement>
 					<Nullable>True</Nullable>
+					<Default>10</Default>
 				</Column>
 				 <!-- <Column>
 					<Name>Latitude</Name>

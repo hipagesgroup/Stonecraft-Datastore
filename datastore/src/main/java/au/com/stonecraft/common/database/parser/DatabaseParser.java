@@ -2,6 +2,7 @@ package au.com.stonecraft.common.database.parser;
 
 import android.net.Uri;
 import android.text.TextUtils;
+import android.view.TextureView;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -53,6 +54,7 @@ public class DatabaseParser {
 	private static final String NULLABLE = "Nullable";
 	private static final String LENGTH = "length";
 	private static final String URI = "uri";
+	private static final String DEFAULT = "Default";
 
 	private DatabaseSchema mySchema;
 
@@ -231,9 +233,13 @@ public class DatabaseParser {
 				boolean nullable = StringUtils.getStringNotNull(
 						myColumnValues.get(NULLABLE)).equalsIgnoreCase(
 						Boolean.TRUE.toString());
+				String defaultValue = myColumnValues.get(DEFAULT);
 
 				dbColumn = new SQLiteColumn(name, type,
 						length, primary, nullable, autoIncrement);
+				if(!TextUtils.isEmpty(defaultValue)) {
+					dbColumn.setDefaultValue(defaultValue);
+				}
 			} catch (Throwable e) {
 				// TODO
 				// throw cannot complete exception

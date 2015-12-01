@@ -21,7 +21,7 @@ public class Shortlist {
 	@DbColumnName("IS_FAVOURITE")
 	private int myIsFavourite;
 	@DbColumnName("PROPERTY_POSTCODE")
-	private int myPostcode;
+	private Integer myPostcode;
 	@DbColumnName("PROPERTY_ADDRESS")
 	private String myAddress;
 

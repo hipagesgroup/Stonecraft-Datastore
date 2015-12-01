@@ -43,7 +43,7 @@ import au.com.stonecraft.common.database.view.DatabaseTable;
  */
 public class Datastore implements OnTaskCompleteListener {
 	public static final int DEFAULT_TOKEN = -1;
-	public static final String DB_EXTENSION = ".db";
+	public static final String DB_EXTENSION = ".sqlite";
 	public static final int FAIL_TYPE_QUERY_FAILED = -1;
 
 	private volatile static Map<String, IDBConnector> myDBConnections;

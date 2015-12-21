@@ -34,13 +34,13 @@
 					<Nullable>True</Nullable>
 					<Default>10</Default>
 				</Column>
-				 <!-- <Column>
+				 <Column>
 					<Name>Latitude</Name>
 					<Type length="4">Integer</Type>
 					<Primary>False</Primary>
 					<AutoIncrement>False</AutoIncrement>
 					<Nullable>True</Nullable>
-				</Column>
+				</Column><!--
 				<Column>
 					<Name>LONGITUDE</Name>
 					<Type length="4">Integer</Type>

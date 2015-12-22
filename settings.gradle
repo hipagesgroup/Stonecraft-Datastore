@@ -1,1 +1,1 @@
-include ':datastore', ':app'
+include ':stonecraft-orm', ':app'

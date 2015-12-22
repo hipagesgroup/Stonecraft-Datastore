@@ -1,0 +1,178 @@
+apply plugin: 'com.android.library'
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'maven-publish'
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.2"
+    resourcePrefix "stonecraft_"
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+
+    defaultConfig {
+        minSdkVersion 16
+        targetSdkVersion 23
+        versionCode 1
+        versionName "1.0.0"
+    }
+    signingConfigs {
+        release {
+            /*storeFile file("myreleasekey.keystore")
+            storePassword "password"
+            keyAlias "MyReleaseKey"
+            keyPassword "password"*/
+        }
+    }
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+        }
+    }
+}
+
+
+dependencies {
+    compile 'com.android.support:support-v4:23.1.1'
+}
+
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+
+ext {
+    bintrayRepo = 'maven'
+    bintrayName = 'stonecraft-orm'
+
+    publishedGroupId = 'com.github.stimsoni9'
+    libraryName = 'stonecraftORM'
+    artifact = 'stonecraft-orm'
+
+    libraryDescription = 'A datastore library for use with android'
+
+    siteUrl = 'https://github.com/stimsoni9/Stonecraft-Datastore'
+    gitUrl = 'https://github.com/stimsoni9/Stonecraft-Datastore.git'
+
+    libraryVersion = '1.0.0'
+
+    developerId = 'stimsoni'
+    developerName = 'Michael Delaney'
+    developerEmail = 'stimsoni9@gmail.com'
+
+    licenseName = 'The Apache Software License, Version 2.0'
+    licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+    allLicenses = ["Apache-2.0"]
+}
+
+version = libraryVersion
+
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
+task javadoc(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+artifacts {
+    archives javadocJar
+    archives sourcesJar
+}
+
+bintray {
+    user = properties.getProperty('bintray.user')
+    key = properties.getProperty('bintray.apikey')
+
+    configurations = ['published', 'archives']
+
+    dryRun = false
+    publish = true
+
+    publications = ['Publication']
+
+    pkg {
+        repo = 'maven'
+        name = 'stonecraft-orm'
+
+        desc = 'A datastore library for use with android'
+
+        websiteUrl = 'https://github.com/stimsoni9/Stonecraft-Datastore'
+        issueTrackerUrl = 'https://github.com/stimsoni9/Stonecraft-Datastore/issues'
+        vcsUrl = 'https://github.com/stimsoni9/Stonecraft-Datastore.git'
+
+        licenses = ['The Apache Software License, Version 2.0']
+        labels = ['android', 'searchable', 'interface', 'layout']
+        publicDownloadNumbers = true
+
+        version {
+            name = '1.0.0'
+            desc = 'Bintray integration'
+            vcsTag = '1.0.0'
+            gpg {
+                sign = true //Determines whether to GPG sign the files. The default is false
+                passphrase = properties.getProperty("bintray.gpg.password")
+                //Optional. The passphrase for GPG signing'
+            }
+        }
+    }
+}
+
+group = publishedGroupId                               // Maven Group ID for the artifact
+
+install {
+    repositories.mavenInstaller {
+        // This generates POM.xml with proper parameters
+        pom {
+            project {
+                packaging 'jar'
+                groupId publishedGroupId
+                artifactId artifact
+
+                // Add your description here
+                name libraryName
+                description libraryDescription
+                url siteUrl
+
+                // Set your license
+                licenses {
+                    license {
+                        name licenseName
+                        url licenseUrl
+                    }
+                }
+                developers {
+                    developer {
+                        id developerId
+                        name developerName
+                        email developerEmail
+                    }
+                }
+                scm {
+                    connection gitUrl
+                    developerConnection gitUrl
+                    url siteUrl
+
+                }
+            }
+        }
+    }
+}
+
+publishing {
+    publications {
+        Publication(MavenPublication) {
+            groupId publishedGroupId
+            artifactId artifact
+            version libraryVersion
+        }
+    }
+}

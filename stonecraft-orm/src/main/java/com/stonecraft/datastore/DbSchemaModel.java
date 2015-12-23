@@ -15,15 +15,15 @@ import com.stonecraft.datastore.exceptions.DatabaseException;
  * @author michaeldelaney
  * 
  */
-public class DatabaseSchema {
+public class DbSchemaModel {
 	private Map<String, DatabaseTable> myTables;
 	private String myName;
 	private int myVersion;
 
 	/**
-	 * This constructor creates an instance of DatabaseSchema
+	 * This constructor creates an instance of DbSchemaModel
 	 */
-	public DatabaseSchema() {
+	public DbSchemaModel() {
 		myTables = new HashMap<String, DatabaseTable>();
 	}
 

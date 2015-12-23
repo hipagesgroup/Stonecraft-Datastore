@@ -8,7 +8,7 @@ import android.util.Log;
 
 import com.stonecraft.datastore.DBConstants;
 import com.stonecraft.datastore.DataMap;
-import com.stonecraft.datastore.DatabaseSchema;
+import com.stonecraft.datastore.DbSchemaModel;
 import com.stonecraft.datastore.DatastoreTransaction;
 import com.stonecraft.datastore.RSData;
 import com.stonecraft.datastore.SettingsTable;
@@ -60,7 +60,7 @@ public class DatabaseUpdater {
 	 * This method checks if the table contains the datamap tables and creates it if it is not found
 	 *
 	 */
-	public static void createDataMapTables(IDBConnector connector, DatabaseSchema schema)
+	public static void createDataMapTables(IDBConnector connector, DbSchemaModel schema)
 		throws DatabaseException {
 		try{
 			SQLiteTable datamapTable = new SQLiteTable(DBConstants.TABLE_MAP, null);
@@ -101,11 +101,11 @@ public class DatabaseUpdater {
 
 	/**
 	 * This method clear all data in the datamap table and re-populates 
-	 * with the data from the passed in DatabaseSchema.
+	 * with the data from the passed in DbSchemaModel.
 	 *
 	 * @param schema
 	 */
-	public static void populateDatamapTables(DatastoreTransaction txn, DatabaseSchema schema)
+	public static void populateDatamapTables(DatastoreTransaction txn, DbSchemaModel schema)
 		throws DatabaseException {
 		Collection<DatabaseTable> tables = schema.getTables().values();
 		List<Map<String, Object>> rows = new ArrayList<Map<String, Object>>();
@@ -148,13 +148,13 @@ public class DatabaseUpdater {
 		txn.addStatement(insert);
 	}
 	
-	public DatabaseSchema update(DatabaseSchema newSchema) throws DatabaseException {
+	public DbSchemaModel update(DbSchemaModel newSchema) throws DatabaseException {
 		int tableCount = myDBConnector.doesTableExist(DBConstants.TABLE_MAP);
 		if(tableCount == 0) {
 			DatabaseUpdater.createDataMapTables(myDBConnector, newSchema);
 		}
 		
-		DatabaseSchema currentSchema = getCurrentSchema(myDBConnector);
+		DbSchemaModel currentSchema = getCurrentSchema(myDBConnector);
 		
 		compareSchemas(currentSchema, newSchema);
 
@@ -187,12 +187,12 @@ public class DatabaseUpdater {
 	}
 	
 	/**
-	 * This method builds a DatabaseSchema based on the current db schema
+	 * This method builds a DbSchemaModel based on the current db schema
 	 *
 	 * @return
 	 */
-	public static DatabaseSchema getCurrentSchema(IDBConnector connector) throws DatabaseException {
-		DatabaseSchema schema = new DatabaseSchema();
+	public static DbSchemaModel getCurrentSchema(IDBConnector connector) throws DatabaseException {
+		DbSchemaModel schema = new DbSchemaModel();
 		DatabaseViewFactory viewFactory = connector.getTableObjectFactory();
 		Query query = new Query(DBConstants.TABLE_MAP);
 		RSData data = connector.query(query);
@@ -255,8 +255,8 @@ public class DatabaseUpdater {
 	 * @param currentSchema
 	 * @param newSchema
 	 */
-	private void compareSchemas(DatabaseSchema currentSchema,
-		DatabaseSchema newSchema) throws DatabaseException {
+	private void compareSchemas(DbSchemaModel currentSchema,
+		DbSchemaModel newSchema) throws DatabaseException {
 		
 		Map<String, DatabaseTable> obsoleteTables = new HashMap<String, DatabaseTable>();
 		Map<String, DatabaseTable> newSchemaTables = newSchema.getTables(); 

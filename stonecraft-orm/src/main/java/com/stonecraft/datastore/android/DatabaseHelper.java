@@ -1,24 +1,27 @@
 package com.stonecraft.datastore.android;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.support.annotation.Nullable;
 import android.util.Log;
+
 import com.stonecraft.datastore.DBConstants;
-import com.stonecraft.datastore.DatabaseSchema;
+import com.stonecraft.datastore.DbSchemaModel;
 import com.stonecraft.datastore.Datastore;
 import com.stonecraft.datastore.DatastoreTransaction;
+import com.stonecraft.datastore.OnConnectionCreated;
 import com.stonecraft.datastore.exceptions.DatabaseException;
 import com.stonecraft.datastore.utils.StringUtils;
 import com.stonecraft.datastore.view.DatabaseColumn;
 import com.stonecraft.datastore.view.DatabaseTable;
 import com.stonecraft.datastore.view.SQLiteColumn;
 import com.stonecraft.datastore.view.SQLiteTable;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * This class is the android database helper used to create and upgraded a
@@ -33,15 +36,17 @@ import com.stonecraft.datastore.view.SQLiteTable;
 public class DatabaseHelper extends SQLiteOpenHelper {
 	private SQLiteDatabase myDBInUse;
 	private final int myVersion;
-	private DatabaseSchema myDBSchema;
+	private DbSchemaModel myDBSchema;
 	private AndroidDBConnection myConnection;
+	private OnConnectionCreated myConnectionCreatedListener;
 
-	protected DatabaseHelper(Context context, String name, int version,
-		AndroidDBConnection connection, DatabaseSchema schema) {
-		super(context, name + Datastore.DB_EXTENSION, null, version);
-		myVersion = version;
+	protected DatabaseHelper(Context context,
+		AndroidDBConnection connection, DbSchemaModel schema, @Nullable final OnConnectionCreated listener) {
+		super(context, schema.getName() + Datastore.DB_EXTENSION, null, schema.getVersion());
+		myVersion = schema.getVersion();
 		myDBSchema = schema;
 		myConnection = connection;
+		myConnectionCreatedListener = listener;
 	}
 
 	@Override
@@ -51,6 +56,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		myDBInUse = db;
 		createDatabase(db);
 		myDBInUse = null;
+
+		if(myConnectionCreatedListener != null) {
+			myConnectionCreatedListener.OnConnectionCreated(
+					Datastore.getDataStore(myDBSchema.getName()));
+		}
 	}
 
 	@Override
@@ -180,7 +190,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			AndroidDBConnection.TABLE_SQLITE_MASTER,
 			new String[]{AndroidDBConnection.COL_SQL}, "type = 'table'", null, null, null, null);
 		cursor.moveToFirst();
-		DatabaseSchema schema = new DatabaseSchema();
+		DbSchemaModel schema = new DbSchemaModel();
 		while(!cursor.isAfterLast()){
 			String createStatement = cursor.getString(0);
 			DatabaseTable table = parseCreateStatement(createStatement);

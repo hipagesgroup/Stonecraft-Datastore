@@ -2,7 +2,7 @@ package com.stonecraft.datastore.interfaces;
 
 import android.net.Uri;
 
-import com.stonecraft.datastore.DatabaseSchema;
+import com.stonecraft.datastore.DbSchemaModel;
 import com.stonecraft.datastore.RSData;
 import com.stonecraft.datastore.interaction.Delete;
 import com.stonecraft.datastore.interaction.Insert;
@@ -78,10 +78,8 @@ public interface IDBConnector {
 	/**
 	 * This method closes the database connection. This method cleans up the
 	 * database connection and ensures it is closed correctly
-	 * 
-	 * @throws DatabaseException
 	 */
-	public void close() throws DatabaseException;
+	public void close();
 
 	/**
 	 * This method checks if the current connection is open and ready to be
@@ -206,7 +204,7 @@ public interface IDBConnector {
 	 *
 	 * @return
 	 */
-	public DatabaseSchema getDatabaseSchema() ;
+	public DbSchemaModel getDatabaseSchema() ;
 
 	/**
 	 * This method returns the uri of the passed in table. This can be used to register a content

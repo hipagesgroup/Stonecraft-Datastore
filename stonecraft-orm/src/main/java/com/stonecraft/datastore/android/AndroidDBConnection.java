@@ -1,6 +1,5 @@
 package com.stonecraft.datastore.android;
 
-import android.app.Application;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -10,8 +9,9 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 
 import com.stonecraft.datastore.DBConstants;
-import com.stonecraft.datastore.DatabaseSchema;
 import com.stonecraft.datastore.DbColumnName;
+import com.stonecraft.datastore.DbSchemaModel;
+import com.stonecraft.datastore.OnConnectionCreated;
 import com.stonecraft.datastore.RSData;
 import com.stonecraft.datastore.exceptions.DatabaseException;
 import com.stonecraft.datastore.interaction.Delete;
@@ -65,15 +65,14 @@ public class AndroidDBConnection implements IDBConnector {
 	private static final String JOIN_LEFT_OUTER_STRING = " LEFT OUTER JOIN ";
 	
 	private DatabaseHelper myDBOpenHelper;
-	private DatabaseSchema myDbSchema;
+	private DbSchemaModel myDbSchema;
 	private Context myAppContext;
 
-	public AndroidDBConnection(Application context, ISchemaCreator schemaImporter) {
+	public AndroidDBConnection(Context context, DbSchemaModel dbSchema,
+			OnConnectionCreated listener) {
 		myAppContext = context;
-		myDbSchema = schemaImporter.getSchema();
-		myDBOpenHelper = new DatabaseHelper(context, myDbSchema.getName(), myDbSchema.getVersion(),
-			this, myDbSchema);
-		schemaImporter.postCreation();
+		myDbSchema = dbSchema;
+		myDBOpenHelper = new DatabaseHelper(context, this, myDbSchema, listener);
 	}
 
 	public String getName() {
@@ -99,7 +98,7 @@ public class AndroidDBConnection implements IDBConnector {
 
 	}
 
-	public void close() throws DatabaseException {
+	public void close() {
 		myDBOpenHelper.getReadableDatabase().close();
 	}
 
@@ -214,7 +213,7 @@ public class AndroidDBConnection implements IDBConnector {
 	 * @see IDBConnector#getDatabaseSchema()
 	 */
 	@Override
-	public DatabaseSchema getDatabaseSchema() {
+	public DbSchemaModel getDatabaseSchema() {
 		return myDbSchema;
 	}
 
@@ -661,8 +660,13 @@ public class AndroidDBConnection implements IDBConnector {
 		 */
 		@Override
 		public byte[] getBlobData(String column) throws DatabaseException {
-			int colIndex = getCursorIndex(column);
-			return myCursor.getBlob(colIndex);
+			try {
+				int colIndex = getCursorIndex(column);
+				return myCursor.getBlob(colIndex);
+			} catch( IllegalStateException e) {
+				throw new IllegalStateException("This could be caused by a limitation in the size " +
+						"of data that can be stored in a sqlite database cell.", e);
+			}
 		}
 
 		@Override

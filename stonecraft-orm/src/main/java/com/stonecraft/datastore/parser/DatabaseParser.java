@@ -1,7 +1,21 @@
 package com.stonecraft.datastore.parser;
 
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.text.TextUtils;
+
+import com.stonecraft.datastore.DbSchemaModel;
+import com.stonecraft.datastore.DatabaseUtils;
+import com.stonecraft.datastore.exceptions.SchemaParseException;
+import com.stonecraft.datastore.utils.StringUtils;
+import com.stonecraft.datastore.view.DatabaseColumn;
+import com.stonecraft.datastore.view.DatabaseTable;
+import com.stonecraft.datastore.view.SQLiteColumn;
+import com.stonecraft.datastore.view.SQLiteTable;
+
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,22 +31,9 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
-
-import com.stonecraft.datastore.DatabaseSchema;
-import com.stonecraft.datastore.DatabaseUtils;
-import com.stonecraft.datastore.exceptions.SchemaParseException;
-import com.stonecraft.datastore.view.DatabaseColumn;
-import com.stonecraft.datastore.view.DatabaseTable;
-import com.stonecraft.datastore.utils.StringUtils;
-import com.stonecraft.datastore.view.SQLiteColumn;
-import com.stonecraft.datastore.view.SQLiteTable;
-
 /**
  * This class parses a Database XML file and returns the contents a
- * DatabaseSchema object. It uses reflection to create the tables and columns
+ * DbSchemaModel object. It uses reflection to create the tables and columns
  * specific to the database this schema is to be created on.
  * 
  * @author mdelaney
@@ -41,7 +42,7 @@ import com.stonecraft.datastore.view.SQLiteTable;
  * @date Date: 16/03/2012 01:50:39
  * @version Revision: 1.0
  */
-public class DatabaseParser {
+public class DatabaseParser extends AsyncTask<InputStream, Void, DbSchemaModel>{
 	private static final String SCHEMA = "Schema";
 	private static final String NAME = "Name";
 	private static final String VERSION = "Version";
@@ -55,30 +56,20 @@ public class DatabaseParser {
 	private static final String URI = "uri";
 	private static final String DEFAULT = "Default";
 
-	private DatabaseSchema mySchema;
+	private DbSchemaModel mySchema;
+	private OnSchemaModelCreated myOnSchemaModelCreated;
 
-	public DatabaseParser() {
-		mySchema = new DatabaseSchema();
+	public DatabaseParser(OnSchemaModelCreated listener) {
+		mySchema = new DbSchemaModel();
+		myOnSchemaModelCreated = listener;
 	}
 
-	public DatabaseSchema parse(String databaseLocation) {
-		try {
-			InputStream is = new FileInputStream(new File(databaseLocation));
-			parse(is);
-		} catch (IOException e) {
-			// TODO
-			// throw cannot complete exception
-			System.out.println("IOException " + e);
-			e.printStackTrace();
-		}
-		return mySchema;
-	}
-
-	public DatabaseSchema parse(InputStream is) {
+	@Override
+	protected DbSchemaModel doInBackground(InputStream... params) {
 		try {
 			SAXParserFactory factory = SAXParserFactory.newInstance();
 			SAXParser saxParser = factory.newSAXParser();
-			saxParser.parse(is, myHandler);
+			saxParser.parse(params[0], myHandler);
 		} catch (MalformedURLException e) {
 			// TODO
 			// throw cannot complete exception
@@ -101,6 +92,24 @@ public class DatabaseParser {
 			e.printStackTrace();
 		}
 
+		return mySchema;
+	}
+
+	@Override
+	protected void onPostExecute(DbSchemaModel dbSchemaModel) {
+		myOnSchemaModelCreated.OnSchemaModelCreated(dbSchemaModel);
+	}
+
+	public DbSchemaModel parse(String databaseLocation) {
+		try {
+			InputStream is = new FileInputStream(new File(databaseLocation));
+			execute(is);
+		} catch (IOException e) {
+			// TODO
+			// throw cannot complete exception
+			System.out.println("IOException " + e);
+			e.printStackTrace();
+		}
 		return mySchema;
 	}
 
@@ -249,4 +258,8 @@ public class DatabaseParser {
 			return dbColumn;
 		}
 	};
+
+	public interface OnSchemaModelCreated {
+		void OnSchemaModelCreated(DbSchemaModel schema);
+	}
 }

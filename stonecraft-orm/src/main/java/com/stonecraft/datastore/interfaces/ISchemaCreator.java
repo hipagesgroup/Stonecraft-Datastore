@@ -1,6 +1,6 @@
 package com.stonecraft.datastore.interfaces;
 
-import com.stonecraft.datastore.DatabaseSchema;
+import com.stonecraft.datastore.DbSchemaModel;
 
 /**
  * This interface is used to get the DB schema that is when creating a database.
@@ -14,7 +14,7 @@ import com.stonecraft.datastore.DatabaseSchema;
  * @version $Revision: 1.0 $
  */
 public interface ISchemaCreator {
-	public DatabaseSchema getSchema();
+	public DbSchemaModel getSchema();
 
 	public void postCreation();
 }

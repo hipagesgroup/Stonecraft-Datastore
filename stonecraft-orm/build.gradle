@@ -4,6 +4,8 @@ apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'maven-publish'
 
+def libVersion = '1.0.1'
+
 android {
     compileSdkVersion 23
     buildToolsVersion "23.0.2"
@@ -18,7 +20,7 @@ android {
         minSdkVersion 16
         targetSdkVersion 23
         versionCode 1
-        versionName "1.0.0"
+        versionName libVersion
     }
     signingConfigs {
         release {
@@ -65,7 +67,7 @@ ext {
     siteUrl = 'https://github.com/stimsoni9/Stonecraft-Datastore'
     gitUrl = 'https://github.com/stimsoni9/Stonecraft-Datastore.git'
 
-    libraryVersion = '1.0.0'
+    libraryVersion = libVersion
 
     developerId = 'stimsoni'
     developerName = 'Michael Delaney'
@@ -97,11 +99,21 @@ artifacts {
     archives sourcesJar
 }
 
+publishing {
+    publications {
+        Publication(MavenPublication) {
+            groupId publishedGroupId
+            artifactId artifact
+            version libraryVersion
+        }
+    }
+}
+
 bintray {
     user = properties.getProperty('bintray.user')
     key = properties.getProperty('bintray.apikey')
 
-    configurations = ['published', 'archives']
+    configurations = ['archives']
 
     dryRun = false
     publish = true
@@ -119,13 +131,14 @@ bintray {
         vcsUrl = 'https://github.com/stimsoni9/Stonecraft-Datastore.git'
 
         licenses = ['The Apache Software License, Version 2.0']
-        labels = ['android', 'searchable', 'interface', 'layout']
+        labels = ['android', 'database', 'orm', 'sqlite', 'datastore']
         publicDownloadNumbers = true
+        publish = true
 
         version {
-            name = '1.0.0'
+            name = libVersion
             desc = 'Bintray integration'
-            vcsTag = '1.0.0'
+            vcsTag = libVersion
             gpg {
                 sign = true //Determines whether to GPG sign the files. The default is false
                 passphrase = properties.getProperty("bintray.gpg.password")
@@ -172,16 +185,6 @@ install {
 
                 }
             }
-        }
-    }
-}
-
-publishing {
-    publications {
-        Publication(MavenPublication) {
-            groupId publishedGroupId
-            artifactId artifact
-            version libraryVersion
         }
     }
 }

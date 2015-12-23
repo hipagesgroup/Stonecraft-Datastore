@@ -20,6 +20,17 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.stonecraft.database.datastoredemo.app.R;
+import com.stonecraft.datastore.Datastore;
+import com.stonecraft.datastore.RSData;
+import com.stonecraft.datastore.android.DbDataLoader;
+import com.stonecraft.datastore.exceptions.CannotCompleteException;
+import com.stonecraft.datastore.exceptions.DatabaseException;
+import com.stonecraft.datastore.interaction.Insert;
+import com.stonecraft.datastore.interaction.Query;
+import com.stonecraft.datastore.interfaces.OnNonQueryComplete;
+import com.stonecraft.datastore.interfaces.OnQueryComplete;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -29,20 +40,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import com.stonecraft.datastore.android.AndroidDBConnection;
-import com.stonecraft.datastore.android.DbDataLoader;
-import com.stonecraft.datastore.DatabaseSchema;
-import com.stonecraft.datastore.Datastore;
-import com.stonecraft.datastore.RSData;
-import com.stonecraft.datastore.exceptions.CannotCompleteException;
-import com.stonecraft.datastore.exceptions.DatabaseException;
-import com.stonecraft.datastore.interaction.Insert;
-import com.stonecraft.datastore.interaction.Query;
-import com.stonecraft.datastore.interfaces.ISchemaCreator;
-import com.stonecraft.datastore.interfaces.OnNonQueryComplete;
-import com.stonecraft.datastore.interfaces.OnQueryComplete;
-import com.stonecraft.datastore.parser.DatabaseParser;
 
 
 public class MainActivity extends AppCompatActivity
@@ -72,18 +69,10 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        getSupportLoaderManager().initLoader(0, null, this);
+//        getSupportLoaderManager().initLoader(0, null, this);
 
         myTxbStatus = (TextView)findViewById(R.id.txbStatus);
 
-        Button btnConnect = (Button)findViewById(R.id.btnConnect);
-        btnConnect.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                connect();
-            }
-        });
         Button btnClose = (Button)findViewById(R.id.btnClose);
         btnClose.setOnClickListener(new View.OnClickListener() {
 
@@ -332,39 +321,14 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void connect() {
-        try
+        try {
+            Datastore.createConnection(getApplication(), getAssets().open("database.xml"), null);
+        } catch(IOException e)
         {
-            ISchemaCreator db = new ISchemaCreator()
-            {
-                @Override
-                public void postCreation() {
-                    myTxbStatus.setText("Connect successful");
-                }
-
-                @Override
-                public DatabaseSchema getSchema() {
-                    try
-                    {
-                        DatabaseParser parser = new DatabaseParser();
-                        return parser.parse(getAssets().open("database.xml"));
-                    }
-                    catch(IOException e)
-                    {
-                        Log.e("DB connection/creation", "Failed to create DB schema [" + e + "]");
-                    }
-
-                    return null;
-                }
-            };
-
-            Datastore.createConnection(new AndroidDBConnection(getApplication(), db));
+            Log.e("DB connection/creation", "Failed to get database xml [" + e + "]");
+        } catch (DatabaseException e) {
+            Log.e("DB connection/creation", "Failed to create database [" + e + "]");
         }
-        catch(DatabaseException e)
-        {
-            Log.e("DB connection/creation", "Failed to create Database [" + e + "]");
-            myTxbStatus.setText("Connect unsuccessful");
-        }
-
     }
 
     private void close() {

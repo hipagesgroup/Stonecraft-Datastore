@@ -51,7 +51,7 @@ public abstract class DatabaseConnection implements IDBConnector {
 	 */
 
 	public void createSchema(ISchemaCreator database) throws DatabaseException {
-		DatabaseSchema schema = database.getSchema();
+		DbSchemaModel schema = database.getSchema();
 		
 		startTransaction();
 		for (String createStmt : schema.getTableCreateStmts()) {

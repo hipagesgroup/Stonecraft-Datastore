@@ -1,15 +1,11 @@
 package com.stonecraft.datastore;
 
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-
+import android.content.Context;
 import android.net.Uri;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.stonecraft.datastore.android.AndroidDBConnection;
 import com.stonecraft.datastore.exceptions.DatabaseException;
 import com.stonecraft.datastore.interaction.Insert;
 import com.stonecraft.datastore.interaction.Query;
@@ -21,7 +17,16 @@ import com.stonecraft.datastore.interfaces.OnNonQueryComplete;
 import com.stonecraft.datastore.interfaces.OnQueryComplete;
 import com.stonecraft.datastore.interfaces.OnTaskCompleteListener;
 import com.stonecraft.datastore.interfaces.Tasker;
+import com.stonecraft.datastore.parser.DatabaseParser;
 import com.stonecraft.datastore.view.DatabaseTable;
+
+import java.io.InputStream;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * All Database interaction occurs through this class
@@ -140,8 +145,8 @@ public class Datastore implements OnTaskCompleteListener {
      * This method creates a database based on the given name and version found in the database
      * xml. It will check if the database has been created previously.
      *
-     * This is the first method that should be called before any interaction
-     * with the database can be made.
+     * This method should be called in the apps Application class to ensure there is always a
+     * valid connection throughout the application.
      *
      * Once this method is called use getDatastore to get an instance of this
      * class.
@@ -149,12 +154,24 @@ public class Datastore implements OnTaskCompleteListener {
      * if a connection is passed in and a connection already exists with the
      * same name it will be closed and replaced with this one.
      *
-     * @param connection
-     * @return
+     * @param context
+     * @param databaseXml
+     * @param listener
      * @throws DatabaseException
      */
-	public static Datastore createConnection(IDBConnector connection)
+	public static void createConnection(final Context context, final InputStream databaseXml,
+			@Nullable final OnConnectionCreated listener)
 			throws DatabaseException {
+		new DatabaseParser(new DatabaseParser.OnSchemaModelCreated() {
+			@Override
+			public void OnSchemaModelCreated(DbSchemaModel schema) {
+				IDBConnector connector = new AndroidDBConnection(context, schema, listener);
+				setConnection(connector);
+			}
+		}).execute(databaseXml);
+	}
+
+	private static void setConnection(IDBConnector connection) {
 		// ensure static fields are initialised;
 		new Datastore();
 		synchronized (Datastore.class) {
@@ -164,7 +181,7 @@ public class Datastore implements OnTaskCompleteListener {
 				myDBConnections.get(connection.getName()).close();
 				myDBConnections.remove(connection.getName());
 			}
-			
+
 			if (!myDBConnections.containsKey(connection.getName())) {
 				// This double checking ensures the same connection can't
 				// be created twice across threads
@@ -175,7 +192,6 @@ public class Datastore implements OnTaskCompleteListener {
 				}
 			}
 		}
-		return getDataStore(connection.getName());
 	}
 
 	/**

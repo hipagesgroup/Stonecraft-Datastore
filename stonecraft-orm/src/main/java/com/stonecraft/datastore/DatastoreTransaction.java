@@ -32,30 +32,35 @@ public class DatastoreTransaction {
         myStatementList.add(statement);
     }
 
-    public void setConnection(IDBConnector connection) {
+    void setConnection(IDBConnector connection) {
         myConnection = connection;
     }
 
-    public void execute() throws DatabaseException{
+    int run() throws DatabaseException{
         try {
+            int result = 0;
             myConnection.startTransaction();
             for(Statement stmt : myStatementList) {
                 if(stmt instanceof Insert) {
                     myConnection.insert((Insert) stmt);
+                    result = 1;
                 } else if(stmt instanceof Update) {
-                    myConnection.update((Update) stmt);
+                    result = myConnection.update((Update) stmt);
                 } else if(stmt instanceof Delete) {
-                    myConnection.delete((Delete) stmt);
+                    result = myConnection.delete((Delete) stmt);
                 } else if(stmt instanceof RawStatement) {
                     myConnection.executeRawStatement(((RawStatement) stmt).getRawStatement());
                 } else if(stmt instanceof UpdateTableStatement) {
                     UpdateTableStatement updateTableStatement = (UpdateTableStatement)stmt;
                     myConnection.updateTable(
                             updateTableStatement.getOldTable(), updateTableStatement.getNewTable());
+                } else {
+                    result = myConnection.doesTableExist(stmt.getTable());
                 }
             }
 
             myConnection.commit();
+            return result;
         }
         catch (DatabaseException e) {
             myConnection.rollBack();

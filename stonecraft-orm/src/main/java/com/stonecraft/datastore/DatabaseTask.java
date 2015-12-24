@@ -1,35 +1,21 @@
 package com.stonecraft.datastore;
 
-import java.util.ArrayList;
-import java.util.List;
+import android.os.AsyncTask;
 
 import com.stonecraft.datastore.exceptions.DatabaseException;
 import com.stonecraft.datastore.interfaces.IDBConnector;
 import com.stonecraft.datastore.interfaces.OnTaskCompleteListener;
 import com.stonecraft.datastore.interfaces.Tasker;
 
-abstract class DatabaseTask implements Tasker {
+import java.util.ArrayList;
+import java.util.List;
+
+abstract class DatabaseTask extends AsyncTask<Void, Void, DatabaseException> implements Tasker {
 
 	protected int myToken;
 	protected IDBConnector myConnection;
 	private int myTaskId;
 	private List<OnTaskCompleteListener> myTaskListeners;
-
-	/**
-	 * This runnable executes the statement in a separate thread and notifies
-	 * any listeners when it is complete.
-	 */
-	private Runnable myRunnable = new Runnable() {
-		@Override
-		public void run() {
-			try {
-				executeTask();
-			} catch (DatabaseException e) {
-				// This exception can be ignored here as it is returned in the
-				// statement complete listeners
-			}
-		}
-	};
 
 	public DatabaseTask(int taskId, int token, IDBConnector conn) {
 		myTaskId = taskId;
@@ -75,21 +61,27 @@ abstract class DatabaseTask implements Tasker {
 	}
 
 	/**
-	 * This method will execute the Database statement in a separate thread and
-	 * return the data in all registered statement complete listeners. if no
-	 * onStatmentComplete listeners have been register the result of this task
-	 * as well as any exceptions will be lost.
-	 */
-	public void Start() throws DatabaseException {
-		new Thread(myRunnable).start();
-	}
-
-	/**
 	 * This method notifys any listeners that the task has completed.
 	 */
 	public void notifyTaskListeners() {
 		for (OnTaskCompleteListener listener : myTaskListeners) {
 			listener.onTaskComplete(this);
+		}
+	}
+
+	@Override
+	protected void onPostExecute(DatabaseException e) {
+		notifyStmtListeners(e);
+		notifyTaskListeners();
+	}
+
+	@Override
+	protected DatabaseException doInBackground(Void... params) {
+		try {
+			startTask();
+			return null;
+		} catch (DatabaseException e) {
+			return e;
 		}
 	}
 
@@ -100,5 +92,7 @@ abstract class DatabaseTask implements Tasker {
 	 * @return
 	 * @throws DatabaseException
 	 */
-	public abstract void executeTask() throws DatabaseException;
+	public abstract void startTask() throws DatabaseException;
+
+	abstract void notifyStmtListeners(DatabaseException e);
 }

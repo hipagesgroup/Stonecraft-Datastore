@@ -22,6 +22,7 @@ class DatabaseQueryTask extends DatabaseTask {
 	private Statement myQuery;
 	private OnQueryComplete myQueryListener;
 	private Class myInjectorClass;
+	private Object[] myResult;
 
 	public DatabaseQueryTask(int taskId, int token, IDBConnector conn,
 		Statement query) {
@@ -42,14 +43,9 @@ class DatabaseQueryTask extends DatabaseTask {
 	 * @throws DatabaseException
 	 */
 	@Override
-	public void executeTask() {
+	public void startTask() throws DatabaseException {
 
-        try {
-            Object[] result = executeTask(myInjectorClass);
-            myQueryListener.onQueryComplete(myToken, result);
-        } catch (DatabaseException e) {
-            myQueryListener.onQueryFailed(myToken, e);
-        }
+		myResult = startTask(myInjectorClass);
 	}
 
     /**
@@ -60,7 +56,7 @@ class DatabaseQueryTask extends DatabaseTask {
      * @return
      * @throws DatabaseException
      */
-    public <T> T[] executeTask(Class<T> classOfT) throws DatabaseException {
+    public <T> T[] startTask(Class<T> classOfT) throws DatabaseException {
 
 		RSData data = null;
         try {
@@ -88,6 +84,20 @@ class DatabaseQueryTask extends DatabaseTask {
 
         return null;
     }
+
+	/**
+	 * This method notifys any listeners that the task has completed.
+	 */
+	@Override
+	void notifyStmtListeners(DatabaseException e) {
+		if(myQueryListener != null) {
+			if (e != null) {
+				myQueryListener.onQueryFailed(myToken, e);
+			} else {
+				myQueryListener.onQueryComplete(myToken, myResult);
+			}
+		}
+	}
 
 	private Object parseQuery(RSData data, Class classOfT) throws DatabaseException {
 

@@ -1,4 +1,4 @@
-package com.stonecraft.datastore.android;
+package com.stonecraft.datastore;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -8,11 +8,6 @@ import android.database.sqlite.SQLiteException;
 import android.graphics.Bitmap;
 import android.net.Uri;
 
-import com.stonecraft.datastore.DBConstants;
-import com.stonecraft.datastore.DbColumnName;
-import com.stonecraft.datastore.DbSchemaModel;
-import com.stonecraft.datastore.OnConnectionCreated;
-import com.stonecraft.datastore.RSData;
 import com.stonecraft.datastore.exceptions.DatabaseException;
 import com.stonecraft.datastore.interaction.Delete;
 import com.stonecraft.datastore.interaction.Insert;

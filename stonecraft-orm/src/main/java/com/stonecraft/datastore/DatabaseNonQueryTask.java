@@ -1,15 +1,11 @@
 package com.stonecraft.datastore;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.stonecraft.datastore.exceptions.DatabaseException;
-import com.stonecraft.datastore.interaction.Delete;
-import com.stonecraft.datastore.interaction.Insert;
-import com.stonecraft.datastore.interaction.Statement;
-import com.stonecraft.datastore.interaction.Update;
 import com.stonecraft.datastore.interfaces.IDBConnector;
 import com.stonecraft.datastore.interfaces.OnNonQueryComplete;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This class is used for tasks that are to be run on a database. It handles
@@ -23,14 +19,14 @@ import com.stonecraft.datastore.interfaces.OnNonQueryComplete;
  * @version $Revision: 1.0 $
  */
 class DatabaseNonQueryTask extends DatabaseTask {
-	private Statement myStatement;
+	private DatastoreTransaction myTransaction;
 	private List<OnNonQueryComplete> myStmtListeners;
 	private int myResult;
 
 	public DatabaseNonQueryTask(int taskId, int token, IDBConnector conn,
-			Statement stmt) {
+            DatastoreTransaction transaction) {
 		super(taskId, token, conn);
-		myStatement = stmt;
+        myTransaction = transaction;
 		myStmtListeners = new ArrayList<OnNonQueryComplete>();
 		myResult = DBConstants.NO_RECORDS_UPDATED;
 	}
@@ -47,27 +43,9 @@ class DatabaseNonQueryTask extends DatabaseTask {
 	 * @throws DatabaseException
 	 */
 	@Override
-	public void executeTask() throws DatabaseException {
-		try {
-			if (myStatement instanceof Insert) {
-				myConnection.insert((Insert) myStatement);
-				myResult = 1;
-			} else if (myStatement instanceof Update) {
-				myResult = myConnection.update((Update) myStatement);
-			} else if (myStatement instanceof Delete) {
-				myResult = myConnection.delete((Delete) myStatement);
-			}
-			else {
-				myResult = myConnection.doesTableExist(myStatement.getTable());
-			}
-
-			notifyStmtListeners(null);
-		} catch (DatabaseException e) {
-			notifyStmtListeners(e);
-			throw e;
-		} finally {
-			notifyTaskListeners();
-		}
+	public void startTask() throws DatabaseException {
+        myTransaction.setConnection(myConnection);
+        myResult = myTransaction.run();
 	}
 
 	/**
@@ -84,7 +62,7 @@ class DatabaseNonQueryTask extends DatabaseTask {
 
 	/**
 	 * This method returns the number of records that were
-	 * updated/deleted/inserted in this task. executeTask() should be called
+	 * updated/deleted/inserted in this task. startTask() should be called
 	 * before this method is called. DBConstants.NO_RECORDS_UPDATED will be
 	 * returned otherwise.
 	 * 
@@ -97,6 +75,7 @@ class DatabaseNonQueryTask extends DatabaseTask {
 	/**
 	 * This method notifys any listeners that the task has completed.
 	 */
+	@Override
 	void notifyStmtListeners(DatabaseException e) {
 		for (OnNonQueryComplete listener : myStmtListeners) {
 			if(e != null) {

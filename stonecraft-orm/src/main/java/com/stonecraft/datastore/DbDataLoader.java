@@ -1,4 +1,4 @@
-package com.stonecraft.datastore.android;
+package com.stonecraft.datastore;
 
 import android.content.Context;
 import android.support.v4.content.AsyncTaskLoader;

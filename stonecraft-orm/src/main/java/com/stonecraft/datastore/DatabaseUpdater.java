@@ -1,17 +1,11 @@
 /**
  * 
  */
-package com.stonecraft.datastore.android;
+package com.stonecraft.datastore;
 
 import android.net.Uri;
 import android.util.Log;
 
-import com.stonecraft.datastore.DBConstants;
-import com.stonecraft.datastore.DataMap;
-import com.stonecraft.datastore.DbSchemaModel;
-import com.stonecraft.datastore.DatastoreTransaction;
-import com.stonecraft.datastore.RSData;
-import com.stonecraft.datastore.SettingsTable;
 import com.stonecraft.datastore.exceptions.DatabaseException;
 import com.stonecraft.datastore.interaction.Delete;
 import com.stonecraft.datastore.interaction.Insert;
@@ -178,7 +172,7 @@ public class DatabaseUpdater {
 		
 		populateDatamapTables(txn, newSchema);
 		try {
-			txn.execute();
+			txn.run();
 		}
 		catch (DatabaseException e) {
 			throw new DatabaseException("Failed to update database", e);

@@ -5,7 +5,6 @@ import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.stonecraft.datastore.android.AndroidDBConnection;
 import com.stonecraft.datastore.exceptions.DatabaseException;
 import com.stonecraft.datastore.interaction.Insert;
 import com.stonecraft.datastore.interaction.Query;
@@ -304,7 +303,7 @@ public class Datastore implements OnTaskCompleteListener {
 		DatabaseQueryTask task = new DatabaseQueryTask(taskId, DEFAULT_TOKEN,
 			myActiveDatabase, stmt);
 		
-		return task.executeTask(classToInject);
+		return task.startTask(classToInject);
 	}
 
 	/**
@@ -331,8 +330,10 @@ public class Datastore implements OnTaskCompleteListener {
 		}
 		
 		int taskId = new AtomicInteger().incrementAndGet();
+		DatastoreTransaction dt = new DatastoreTransaction();
+		dt.addStatement(stmt);
 		DatabaseNonQueryTask task = new DatabaseNonQueryTask(taskId, token,
-				myActiveDatabase, stmt);
+				myActiveDatabase, dt);
 		task.addOnStmtCompleteListener(listener);
 
 		try {
@@ -359,9 +360,11 @@ public class Datastore implements OnTaskCompleteListener {
 		}
 		
 		int taskId = new AtomicInteger().incrementAndGet();
+		DatastoreTransaction dt = new DatastoreTransaction();
+		dt.addStatement(stmt);
 		DatabaseNonQueryTask task = new DatabaseNonQueryTask(taskId,
-				DEFAULT_TOKEN, myActiveDatabase, stmt);
-		task.executeTask();
+				DEFAULT_TOKEN, myActiveDatabase, dt);
+		task.startTask();
 		return task.getTaskResult();
 	}
 	
@@ -462,8 +465,10 @@ public class Datastore implements OnTaskCompleteListener {
 		}
 		
 		int taskId = new AtomicInteger().incrementAndGet();
+		DatastoreTransaction dt = new DatastoreTransaction();
+		dt.addStatement(new Statement(tableName));
 		DatabaseNonQueryTask task = new DatabaseNonQueryTask(taskId, token,
-				myActiveDatabase, new Statement(tableName));
+				myActiveDatabase, dt);
 		task.addOnStmtCompleteListener(listener);
 
 		try {
@@ -510,6 +515,10 @@ public class Datastore implements OnTaskCompleteListener {
 	public Uri getTableUri(String tableName) {
 		return myActiveDatabase.getTableUri(tableName);
 	}
+
+	IDBConnector getActiveDatabase() {
+		return myActiveDatabase;
+	}
 	
 	private boolean validateDBConnection() throws DatabaseException {
 		if(isConnectionAvail()){
@@ -535,12 +544,12 @@ public class Datastore implements OnTaskCompleteListener {
 	private void executeStmt(DatabaseTask task) throws DatabaseException {
 				
 		if (isBlockingCall()) {
-			task.executeTask();
+			task.startTask();
 		} else if (isTasksQueued()) {
 			task.addOnTaskCompleteListener(this);
 			addTaskToQueue(task);
 		} else {
-			task.Start();
+			task.execute();
 		}
 	}
 
@@ -557,7 +566,7 @@ public class Datastore implements OnTaskCompleteListener {
 			myQueuedTasks.add(dt);
 
 			if (myQueuedTasks.size() == 1) {
-				dt.Start();
+				dt.execute();
 			}
 		}
 	}
@@ -571,19 +580,12 @@ public class Datastore implements OnTaskCompleteListener {
 	 */
 	@Override
 	public void onTaskComplete(Tasker task) {
-		// All exceptions are ignored in this method as the task will notify the
-		// caller
-		// and it's the caller responsibility to handle it.
-		try {
-			synchronized (myQueuedTasks) {
-				myQueuedTasks.remove(task);
+		synchronized (myQueuedTasks) {
+			myQueuedTasks.remove(task);
 
-				if (myQueuedTasks.size() > 0) {
-					myQueuedTasks.get(0).Start();
-				}
+			if (myQueuedTasks.size() > 0) {
+				myQueuedTasks.get(0).execute();
 			}
-		} catch (DatabaseException ex) {
-			// ignore as the task will notify the caller.
 		}
 	}
 }

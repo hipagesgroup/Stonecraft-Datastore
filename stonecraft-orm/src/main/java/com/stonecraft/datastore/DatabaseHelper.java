@@ -1,4 +1,4 @@
-package com.stonecraft.datastore.android;
+package com.stonecraft.datastore;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -7,11 +7,6 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.stonecraft.datastore.DBConstants;
-import com.stonecraft.datastore.DbSchemaModel;
-import com.stonecraft.datastore.Datastore;
-import com.stonecraft.datastore.DatastoreTransaction;
-import com.stonecraft.datastore.OnConnectionCreated;
 import com.stonecraft.datastore.exceptions.DatabaseException;
 import com.stonecraft.datastore.utils.StringUtils;
 import com.stonecraft.datastore.view.DatabaseColumn;
@@ -208,7 +203,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 				DatastoreTransaction txn = new DatastoreTransaction();
 				txn.setConnection(myConnection);
 				DatabaseUpdater.populateDatamapTables(txn, schema);
-				txn.execute();
+				txn.run();
 			} catch (DatabaseException e) {
 				throw new RuntimeException("Failed to populate the datamap table with the tables" +
 					" parsed from the master table [" + e + "]");

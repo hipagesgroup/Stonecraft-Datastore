@@ -37,10 +37,10 @@ public class CreateTableTask extends DatabaseTask {
 	}
 
 	/* (non-Javadoc)
-	 * @see DatabaseTask#executeTask()
+	 * @see DatabaseTask#startTask()
 	 */
 	@Override
-	public void executeTask() throws DatabaseException {
+	public void startTask() throws DatabaseException {
 
 		try{
 			String createStatement = myTable.getCreateTableStmt();
@@ -70,7 +70,7 @@ public class CreateTableTask extends DatabaseTask {
 	
 	/**
 	 * This method returns the number of records that were
-	 * updated/deleted/inserted in this task. executeTask() should be called
+	 * updated/deleted/inserted in this task. startTask() should be called
 	 * before this method is called. DBConstants.NO_RECORDS_UPDATED will be
 	 * returned otherwise.
 	 * 

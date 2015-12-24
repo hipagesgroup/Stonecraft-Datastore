@@ -23,7 +23,7 @@ import android.widget.TextView;
 import com.stonecraft.database.datastoredemo.app.R;
 import com.stonecraft.datastore.Datastore;
 import com.stonecraft.datastore.RSData;
-import com.stonecraft.datastore.android.DbDataLoader;
+import com.stonecraft.datastore.DbDataLoader;
 import com.stonecraft.datastore.exceptions.CannotCompleteException;
 import com.stonecraft.datastore.exceptions.DatabaseException;
 import com.stonecraft.datastore.interaction.Insert;

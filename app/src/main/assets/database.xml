@@ -10,11 +10,10 @@
 					<Name>PROPERTY_ID</Name>
 					<Type length="9">Integer</Type>
 					<Primary>True</Primary>
-					<Nullable>False</Nullable>
 				</Column>
 				<Column>
 					<Name>IS_FAVOURITE</Name>
-					<Type length="9">Integer</Type>
+					<Type length="9">Boolean</Type>
 					<Primary>False</Primary>
 					<AutoIncrement>False</AutoIncrement>
 					<Nullable>False</Nullable>
@@ -40,21 +39,28 @@
 					<Primary>False</Primary>
 					<AutoIncrement>False</AutoIncrement>
 					<Nullable>True</Nullable>
-				</Column><!--
+				</Column>
+			</Columns>
+		</Table>
+		<Table uri="content://com.delaney.shortlistjoin">
+			<Name>SHORT_LIST_JOIN</Name>
+			<Columns>
 				<Column>
-					<Name>LONGITUDE</Name>
-					<Type length="4">Integer</Type>
-					<Primary>False</Primary>
-					<AutoIncrement>False</AutoIncrement>
-					<Nullable>True</Nullable>
+					<Name>ID</Name>
+					<Type length="9">Integer</Type>
+					<Primary>True</Primary>
+					<AutoIncrement>True</AutoIncrement>
 				</Column>
 				<Column>
-					<Name>DESCRIPTION</Name>
+					<Name>PROPERTY_ID</Name>
+					<Type length="0">Integer</Type>
+				</Column>
+				<Column>
+					<Name>PROPERTY_POSTCODE</Name>
 					<Type length="4">Integer</Type>
-					<Primary>False</Primary>
-					<AutoIncrement>False</AutoIncrement>
 					<Nullable>True</Nullable>
-				</Column> -->
+					<Default>10</Default>
+				</Column>
 			</Columns>
 		</Table>
 		<Table uri="content://com.delaney.photos">

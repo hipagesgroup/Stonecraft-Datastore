@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -56,6 +57,10 @@ public class Datastore implements OnTaskCompleteListener {
 	private boolean myTasksQueued = true;
 	private boolean myBlockingCall = false;
 	private boolean myIsAttemptReconnect = true;
+    //This latch ensures that an instance of the datastore can't be returned while the parsing
+    //of a db schema is in progress.
+    private static CountDownLatch myParsingLatch;
+	private final static AtomicInteger myParsingCount = new AtomicInteger(0);
 
 	/**
 	 * This constructor is only used internally by createDatabase to ensure
@@ -83,10 +88,18 @@ public class Datastore implements OnTaskCompleteListener {
 	 * @param connection
 	 * @return
 	 */
-	public static Datastore getDataStore(String connection) {
-		if (myDBConnections != null && myDBConnections.containsKey(connection)) {
-			return new Datastore(myDBConnections.get(connection));
-		}
+    public static Datastore getDataStore(String connection) {
+        try {
+			myParsingLatch.await();
+
+            if (myDBConnections != null && myDBConnections.containsKey(connection)) {
+                return new Datastore(myDBConnections.get(connection));
+            }
+
+        } catch (InterruptedException e) {
+            Log.e(Datastore.class.getSimpleName(), "The current thread has been interruprted. " +
+                    "A datastore object will not be returned [" + e + "]");
+        }
 
 		return null;
 	}
@@ -161,16 +174,26 @@ public class Datastore implements OnTaskCompleteListener {
 	public static void createConnection(final Context context, final InputStream databaseXml,
 			@Nullable final OnConnectionCreated listener)
 			throws DatabaseException {
-		new DatabaseParser(new DatabaseParser.OnSchemaModelCreated() {
-			@Override
-			public void OnSchemaModelCreated(DbSchemaModel schema) {
-				IDBConnector connector = new AndroidDBConnection(context, schema, listener);
-				setConnection(connector);
+			myParsingCount.incrementAndGet();
+			if (myParsingLatch == null) {
+				myParsingLatch = new CountDownLatch(1);
 			}
-		}).execute(databaseXml);
+
+			new DatabaseParser(new DatabaseParser.OnSchemaModelCreated() {
+				@Override
+				public void OnSchemaModelCreated(DbSchemaModel schema) {
+                    IDBConnector connector = new AndroidDBConnection(context, schema, listener);
+                    setConnection(connector);
+
+					if(myParsingCount.decrementAndGet() == 0) {
+						myParsingLatch.countDown();
+					}
+				}
+			}).execute(databaseXml);
 	}
 
 	private static void setConnection(IDBConnector connection) {
+
 		// ensure static fields are initialised;
 		new Datastore();
 		synchronized (Datastore.class) {
@@ -272,7 +295,7 @@ public class Datastore implements OnTaskCompleteListener {
 		
 		int taskId = new AtomicInteger().incrementAndGet();
 		DatabaseQueryTask task = new DatabaseQueryTask(taskId, token,
-				myActiveDatabase, stmt);
+				this, stmt);
 		task.setOnQueryCompleteListener(listener);
 		task.setInjectorClass(injectorClass);
 
@@ -301,7 +324,7 @@ public class Datastore implements OnTaskCompleteListener {
 		
 		int taskId = new AtomicInteger().incrementAndGet();
 		DatabaseQueryTask task = new DatabaseQueryTask(taskId, DEFAULT_TOKEN,
-			myActiveDatabase, stmt);
+				this, stmt);
 		
 		return task.startTask(classToInject);
 	}
@@ -318,22 +341,13 @@ public class Datastore implements OnTaskCompleteListener {
 	 */
 	public void executeNonQuery(int token, Statement stmt,
 			final OnNonQueryComplete listener) {
-		try{
-			if(!validateDBConnection()){
-				throw new DatabaseException(
-					"Attempt to reopen an already closed database object. "
-					+ "Ensure a connection to the database is currently valid and open");
-			}
-		}
-		catch (DatabaseException e) {
-			listener.onNonQueryFailed(token, e);
-		}
 		
 		int taskId = new AtomicInteger().incrementAndGet();
 		DatastoreTransaction dt = new DatastoreTransaction();
+		dt.setConnection(myActiveDatabase);
 		dt.addStatement(stmt);
 		DatabaseNonQueryTask task = new DatabaseNonQueryTask(taskId, token,
-				myActiveDatabase, dt);
+				this, dt);
 		task.addOnStmtCompleteListener(listener);
 
 		try {
@@ -353,17 +367,13 @@ public class Datastore implements OnTaskCompleteListener {
 	 * @throws DatabaseException
 	 */
 	public int executeNonQuery(Statement stmt) throws DatabaseException {
-		if(!validateDBConnection()){
-			throw new DatabaseException(
-				"Attempt to reopen an already closed database object. "
-				+ "Ensure a connection to the database is currently valid and open");
-		}
 		
 		int taskId = new AtomicInteger().incrementAndGet();
 		DatastoreTransaction dt = new DatastoreTransaction();
+		dt.setConnection(myActiveDatabase);
 		dt.addStatement(stmt);
 		DatabaseNonQueryTask task = new DatabaseNonQueryTask(taskId,
-				DEFAULT_TOKEN, myActiveDatabase, dt);
+				DEFAULT_TOKEN, this, dt);
 		task.startTask();
 		return task.getTaskResult();
 	}
@@ -452,23 +462,13 @@ public class Datastore implements OnTaskCompleteListener {
 	 * @param listener
 	 */
 	public void doesTableExist(int token, String tableName, final OnNonQueryComplete listener){
-		try{
-			if(!validateDBConnection()){
-				throw new DatabaseException(
-					"Attempt to reopen an already closed database object. "
-					+ "Ensure a connection to the database is currently valid and open");
-			}
-		}
-		catch (DatabaseException e) {
-			listener.onNonQueryFailed(token, e);
-			return;
-		}
 		
 		int taskId = new AtomicInteger().incrementAndGet();
 		DatastoreTransaction dt = new DatastoreTransaction();
+		dt.setConnection(myActiveDatabase);
 		dt.addStatement(new Statement(tableName));
 		DatabaseNonQueryTask task = new DatabaseNonQueryTask(taskId, token,
-				myActiveDatabase, dt);
+				this, dt);
 		task.addOnStmtCompleteListener(listener);
 
 		try {
@@ -489,20 +489,9 @@ public class Datastore implements OnTaskCompleteListener {
 	 * @throws DatabaseException
 	 */
 	public void createTable(int token, DatabaseTable table, OnNonQueryComplete listener) {
-		try{
-			if(!validateDBConnection()){
-				throw new DatabaseException(
-					"Attempt to reopen an already closed database object. "
-					+ "Ensure a connection to the database is currently valid and open");
-			}
-		}
-		catch (DatabaseException e) {
-			listener.onNonQueryFailed(token, e);
-		}
-		
 		int taskId = new AtomicInteger().incrementAndGet();
 		CreateTableTask task = new CreateTableTask(taskId, token,
-				myActiveDatabase, table);
+				this, table);
 		task.addOnStmtCompleteListener(listener);
 
 		try {
@@ -520,7 +509,7 @@ public class Datastore implements OnTaskCompleteListener {
 		return myActiveDatabase;
 	}
 	
-	private boolean validateDBConnection() throws DatabaseException {
+	boolean validateDBConnection() throws DatabaseException {
 		if(isConnectionAvail()){
 			return true;
 		}

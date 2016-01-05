@@ -1,8 +1,5 @@
 package com.stonecraft.datastore.interaction;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * This class is the base for all statements. It is a POJO for the table the
  * statement is to be run on
@@ -15,14 +12,12 @@ import java.util.List;
  */
 public class Statement {
 	private String myTable;
-	private List<Join> myJoins;
 
 	/**
 	 * Constructor
 	 */
 	public Statement(String table) {
 		myTable = table;
-		myJoins = new ArrayList<Join>();
 	}
 
 	/**
@@ -31,20 +26,5 @@ public class Statement {
 	public String getTable() {
 		return myTable;
 	}
-
-	/**
-	 * @return the joins
-	 */
-	public List<Join> getJoins() {
-		return myJoins;
-	}
-
-	/**
-	 * @param joins the joins to set
-	 */
-	public void addJoins(Join join) {
-		myJoins.add(join);
-	}
-	
 	
 }

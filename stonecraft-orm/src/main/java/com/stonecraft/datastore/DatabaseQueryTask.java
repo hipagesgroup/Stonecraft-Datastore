@@ -3,7 +3,6 @@ package com.stonecraft.datastore;
 import com.stonecraft.datastore.exceptions.DatabaseException;
 import com.stonecraft.datastore.interaction.Query;
 import com.stonecraft.datastore.interaction.RawSQLQuery;
-import com.stonecraft.datastore.interaction.Statement;
 import com.stonecraft.datastore.interfaces.IDBConnector;
 import com.stonecraft.datastore.interfaces.OnQueryComplete;
 
@@ -19,14 +18,14 @@ import com.stonecraft.datastore.interfaces.OnQueryComplete;
  * @version $Revision: 1.0 $
  */
 class DatabaseQueryTask extends DatabaseTask {
-	private Statement myQuery;
+	private Query myQuery;
 	private OnQueryComplete myQueryListener;
 	private Class myInjectorClass;
 	private Object[] myResult;
 
-	public DatabaseQueryTask(int taskId, int token, IDBConnector conn,
-		Statement query) {
-		super(taskId, token, conn);
+	public DatabaseQueryTask(int taskId, int token, Datastore datastore,
+		Query query) {
+		super(taskId, token, datastore);
 		myQuery = query;
 	}
 
@@ -44,7 +43,6 @@ class DatabaseQueryTask extends DatabaseTask {
 	 */
 	@Override
 	public void startTask() throws DatabaseException {
-
 		myResult = startTask(myInjectorClass);
 	}
 
@@ -60,11 +58,12 @@ class DatabaseQueryTask extends DatabaseTask {
 
 		RSData data = null;
         try {
+			IDBConnector connector = myDatastore.getActiveDatabase();
             if (myQuery instanceof Query) {
-                data = myConnection.query((Query)myQuery);
+                data = connector.query((Query)myQuery);
                 return (T[])parseQuery(data, classOfT);
             } else if (myQuery instanceof RawSQLQuery) {
-                data = myConnection.executeRawQuery((((RawSQLQuery)myQuery)).getQuery());
+                data = connector.executeRawQuery((((RawSQLQuery)myQuery)).getQuery());
                 return (T[])parseQuery(data, classOfT);
             }
             else {
@@ -109,8 +108,9 @@ class DatabaseQueryTask extends DatabaseTask {
 		if(myQueryListener != null) {
 			result = myQueryListener.parseData(data);
 		}
+
 		if(result == null) {
-            return new DatabaseObjectInjector().inject(data, classOfT);
+            return new DatabaseObjectInjector(myQuery).inject(data, classOfT);
 		}
 
 		data.close();

@@ -19,11 +19,13 @@ public class Shortlist {
 	@DbColumnName("PROPERTY_ID")
 	private Integer myPropertyID;
 	@DbColumnName("IS_FAVOURITE")
-	private int myIsFavourite;
+	private boolean myIsFavourite;
 	@DbColumnName("PROPERTY_POSTCODE")
 	private Integer myPostcode;
 	@DbColumnName("PROPERTY_ADDRESS")
 	private String myAddress;
+	@DbColumnName("SHORT_LIST_JOIN.ID")
+	private Integer myJoinId;
 
 
 	public int getPropertyID() {
@@ -34,11 +36,11 @@ public class Shortlist {
 		myPropertyID = propertyID;
 	}
 
-	public int getIsFavourite() {
+	public boolean getIsFavourite() {
 		return myIsFavourite;
 	}
 
-	public void setIsFavourite(int isFavourite) {
+	public void setIsFavourite(boolean isFavourite) {
 		myIsFavourite = isFavourite;
 	}
 
@@ -56,5 +58,9 @@ public class Shortlist {
 
 	public void setAddress(String address) {
 		myAddress = address;
+	}
+
+	public Integer getJoinId() {
+		return myJoinId;
 	}
 }

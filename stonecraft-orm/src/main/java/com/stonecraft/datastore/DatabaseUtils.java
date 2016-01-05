@@ -30,30 +30,6 @@ public class DatabaseUtils {
 	}
 
 	/**
-	 * This method converts an int in the database to a boolean
-	 * 
-	 * @param value
-	 * @return
-	 */
-	public static boolean convertFromSqliteBoolean(int value) {
-		return value != DBConstants.SQLITE_FALSE;
-	}
-
-	/**
-	 * This method convert a boolean to an int for use in a sqlite database
-	 * 
-	 * @param value
-	 * @return
-	 */
-	public static int convertToSqliteBoolean(boolean value) {
-		if (value) {
-			return DBConstants.SQLITE_TRUE;
-		}
-
-		return DBConstants.SQLITE_FALSE;
-	}
-
-	/**
 	 * This method returns the corresponding int value for a datatype.
 	 * 
 	 * Valid datatypes are those that are found in DatabaseConstants with a
@@ -81,4 +57,35 @@ public class DatabaseUtils {
 
 		return DBConstants.DATATYPE_INT_UNKNOWN;
 	}
+
+    /**
+     * This method returns the tablename and column name in a format that should be used in
+     * a statements AS clause.
+     *
+     * For example 'Select PHOTO.ID AS [photo.id] from PHOTO'
+     *
+     * NOTE: This method only returns the name. The clause should add the brackets '[]' so
+     * that the clause don't encounter an error due to the invalid characters
+     *
+     * @param tableName
+     * @param colName
+     * @return
+     */
+	public static String getDatabaseAsName(String tableName, String colName) {
+		return (tableName + colName).toLowerCase();
+	}
+
+    public static String normaliseTableColumnAsName(String name) {
+        return name.replace(getTableColumnSeparator(), "").toLowerCase();
+    }
+
+    /**
+     * This method returns the standard table column seperator used in SQL
+     *
+     * For example the '.' in PHOTO.ID
+     * @return
+     */
+    public static String getTableColumnSeparator() {
+        return ".";
+    }
 }

@@ -1,7 +1,6 @@
 package com.stonecraft.datastore;
 
 import com.stonecraft.datastore.exceptions.DatabaseException;
-import com.stonecraft.datastore.interfaces.IDBConnector;
 import com.stonecraft.datastore.interfaces.OnNonQueryComplete;
 
 import java.util.ArrayList;
@@ -23,9 +22,9 @@ class DatabaseNonQueryTask extends DatabaseTask {
 	private List<OnNonQueryComplete> myStmtListeners;
 	private int myResult;
 
-	public DatabaseNonQueryTask(int taskId, int token, IDBConnector conn,
+	public DatabaseNonQueryTask(int taskId, int token, Datastore datastore,
             DatastoreTransaction transaction) {
-		super(taskId, token, conn);
+		super(taskId, token, datastore);
         myTransaction = transaction;
 		myStmtListeners = new ArrayList<OnNonQueryComplete>();
 		myResult = DBConstants.NO_RECORDS_UPDATED;
@@ -44,7 +43,12 @@ class DatabaseNonQueryTask extends DatabaseTask {
 	 */
 	@Override
 	public void startTask() throws DatabaseException {
-        myTransaction.setConnection(myConnection);
+		if(!myDatastore.validateDBConnection()){
+			throw new DatabaseException(
+					"Attempt to reopen an already closed database object. "
+							+ "Ensure a connection to the database is currently valid and open");
+		}
+
         myResult = myTransaction.run();
 	}
 

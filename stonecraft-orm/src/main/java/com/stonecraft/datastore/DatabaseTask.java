@@ -3,7 +3,6 @@ package com.stonecraft.datastore;
 import android.os.AsyncTask;
 
 import com.stonecraft.datastore.exceptions.DatabaseException;
-import com.stonecraft.datastore.interfaces.IDBConnector;
 import com.stonecraft.datastore.interfaces.OnTaskCompleteListener;
 import com.stonecraft.datastore.interfaces.Tasker;
 
@@ -13,14 +12,14 @@ import java.util.List;
 abstract class DatabaseTask extends AsyncTask<Void, Void, DatabaseException> implements Tasker {
 
 	protected int myToken;
-	protected IDBConnector myConnection;
+	protected Datastore myDatastore;
 	private int myTaskId;
 	private List<OnTaskCompleteListener> myTaskListeners;
 
-	public DatabaseTask(int taskId, int token, IDBConnector conn) {
+	public DatabaseTask(int taskId, int token, Datastore datastore) {
 		myTaskId = taskId;
 		myToken = token;
-		myConnection = conn;
+		myDatastore = datastore;
 
 		myTaskListeners = new ArrayList<OnTaskCompleteListener>();
 	}

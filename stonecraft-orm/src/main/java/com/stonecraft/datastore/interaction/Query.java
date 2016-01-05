@@ -13,7 +13,7 @@ import java.util.List;
  * @date $Date: 16/03/2012 01:50:39 $
  * @version $Revision: 1.0 $
  */
-public class Query extends Statement {
+public class Query {
 	private Boolean myIsdistinct;
 	private String[] myColumns;
 	private String myWhereClause;
@@ -22,10 +22,36 @@ public class Query extends Statement {
 	private String myHaving;
 	private String myOrderBy;
 	private String myLimit;
+	private String myTable;
+	private List<Join> myJoins;
 
 	public Query (String tableName) {
-		super(tableName);
+		myTable = tableName;
 		myArguments = new ArrayList<String>();
+		myJoins = new ArrayList<Join>();
+	}
+
+	/**
+	 * @return the table
+	 */
+	public String getTable() {
+		return myTable;
+	}
+
+	/**
+	 * @return the joins
+	 */
+	public List<Join> getJoins() {
+		return myJoins;
+	}
+
+	/**
+	 * the joins to set
+	 *
+	 * @param join
+	 */
+	public void addJoins(Join join) {
+		myJoins.add(join);
 	}
 
 	/**

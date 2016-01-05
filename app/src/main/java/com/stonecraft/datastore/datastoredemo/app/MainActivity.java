@@ -13,6 +13,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.util.Pair;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -22,11 +23,13 @@ import android.widget.TextView;
 
 import com.stonecraft.database.datastoredemo.app.R;
 import com.stonecraft.datastore.Datastore;
-import com.stonecraft.datastore.RSData;
+import com.stonecraft.datastore.DatastoreTransaction;
 import com.stonecraft.datastore.DbDataLoader;
+import com.stonecraft.datastore.RSData;
 import com.stonecraft.datastore.exceptions.CannotCompleteException;
 import com.stonecraft.datastore.exceptions.DatabaseException;
 import com.stonecraft.datastore.interaction.Insert;
+import com.stonecraft.datastore.interaction.Join;
 import com.stonecraft.datastore.interaction.Query;
 import com.stonecraft.datastore.interfaces.OnNonQueryComplete;
 import com.stonecraft.datastore.interfaces.OnQueryComplete;
@@ -69,8 +72,8 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-//        getSupportLoaderManager().initLoader(0, null, this);
-
+        getSupportLoaderManager().initLoader(0, null, this);
+        populateTables();
         myTxbStatus = (TextView)findViewById(R.id.txbStatus);
 
         Button btnClose = (Button)findViewById(R.id.btnClose);
@@ -144,7 +147,16 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        Uri uri = Uri.parse("content://com.delaney.shortlist");
+        Button btnJoinTest = (Button)findViewById(R.id.btnJoinTest);
+        btnJoinTest.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                testJoins();
+            }
+        });
+
+        Uri uri = Datastore.getDataStore(DB_NAME).getTableUri("SHORT_LIST");
         getContentResolver().registerContentObserver(uri, true, myContentObserver);
     }
 
@@ -317,7 +329,7 @@ public class MainActivity extends AppCompatActivity
         intent.setType("image/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
 
-        startActivityForResult(Intent.createChooser(intent,"Select Picture"), 1);
+        startActivityForResult(Intent.createChooser(intent, "Select Picture"), 1);
     }
 
     private void connect() {
@@ -359,12 +371,134 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    private void testJoins() {
+
+        Query query = new Query("SHORT_LIST");
+        Join join = new Join("SHORT_LIST_JOIN", Join.JOIN_INNER);
+        join.addJoinExpression(new Pair<String, String>("SHORT_LIST", "PROPERTY_ID"),
+            new Pair<String, String>("SHORT_LIST_JOIN", "PROPERTY_ID"));
+        query.addJoins(join);
+
+        Datastore ds = Datastore.getDataStore(DB_NAME);
+        ds.executeQuery(0, query, new OnQueryComplete<JoinTest>() {
+
+            @Override
+            public void onQueryComplete(int token, JoinTest[] resultSet) {
+                Shortlist list = null;
+                if(resultSet != null) {
+                    for(JoinTest test : resultSet) {
+
+                        if(list == null || test.getShortlist().getPropertyID() != list.getPropertyID()){
+                            list = test.getShortlist();
+                            Log.d("testJoins", "Shortlist " + list.getPropertyID() + " postcode " +
+                                    list.getPostcode());
+                        }
+
+                        ShortlistJoin join = test.getShortlistJoin();
+                        Log.d("testJoins", "\tShortlist id " + join.getShortListPropertyID() +
+                                " join id " + join.getShortListId() + " postcode " +
+                                join.getShortListPostcode());
+                        Log.d("testJoins", "\tjoin id " + test.getShortlist().getJoinId());
+
+                    }
+                }
+            }
+
+            @Override
+            public void onQueryFailed(int token, DatabaseException e) {
+
+            }
+        });
+    }
+
+    private void populateTables() {
+        DatastoreTransaction dt = new DatastoreTransaction();
+        Shortlist shortList = new Shortlist();
+        shortList.setPropertyID(0);
+        shortList.setIsFavourite(true);
+        shortList.setPostcode(2000);
+        dt.addStatement(new Insert<Shortlist>("SHORT_LIST", shortList));
+        shortList = new Shortlist();
+        shortList.setPropertyID(1);
+        shortList.setIsFavourite(true);
+        shortList.setPostcode(2001);
+        dt.addStatement(new Insert<Shortlist>("SHORT_LIST", shortList));
+        shortList = new Shortlist();
+        shortList.setPropertyID(2);
+        shortList.setIsFavourite(true);
+        shortList.setPostcode(2002);
+        dt.addStatement(new Insert<Shortlist>("SHORT_LIST", shortList));
+        shortList = new Shortlist();
+        shortList.setPropertyID(3);
+        shortList.setIsFavourite(true);
+        shortList.setPostcode(2003);
+        dt.addStatement(new Insert<Shortlist>("SHORT_LIST", shortList));
+        shortList = new Shortlist();
+        shortList.setPropertyID(4);
+        shortList.setIsFavourite(true);
+        shortList.setPostcode(2004);
+        dt.addStatement(new Insert<Shortlist>("SHORT_LIST", shortList));
+
+        ShortlistJoin shortlistJoin = new ShortlistJoin();
+        shortlistJoin.setShortListId(0);
+        shortlistJoin.setShortListPropertyID(0);
+        shortlistJoin.setShortListPostcode(2000);
+        dt.addStatement(new Insert<ShortlistJoin>("SHORT_LIST_JOIN", shortlistJoin));
+        shortlistJoin = new ShortlistJoin();
+        shortlistJoin.setShortListId(1);
+        shortlistJoin.setShortListPropertyID(0);
+        shortlistJoin.setShortListPostcode(2000);
+        dt.addStatement(new Insert<ShortlistJoin>("SHORT_LIST_JOIN", shortlistJoin));
+        shortlistJoin = new ShortlistJoin();
+        shortlistJoin.setShortListId(2);
+        shortlistJoin.setShortListPropertyID(0);
+        shortlistJoin.setShortListPostcode(2000);
+        dt.addStatement(new Insert<ShortlistJoin>("SHORT_LIST_JOIN", shortlistJoin));
+        shortlistJoin = new ShortlistJoin();
+        shortlistJoin.setShortListId(3);
+        shortlistJoin.setShortListPropertyID(1);
+        shortlistJoin.setShortListPostcode(2000);
+        dt.addStatement(new Insert<ShortlistJoin>("SHORT_LIST_JOIN", shortlistJoin));
+        shortlistJoin = new ShortlistJoin();
+        shortlistJoin.setShortListId(4);
+        shortlistJoin.setShortListPropertyID(2);
+        shortlistJoin.setShortListPostcode(2000);
+        dt.addStatement(new Insert<ShortlistJoin>("SHORT_LIST_JOIN", shortlistJoin));
+        shortlistJoin = new ShortlistJoin();
+        shortlistJoin.setShortListId(5);
+        shortlistJoin.setShortListPropertyID(2);
+        shortlistJoin.setShortListPostcode(2000);
+        dt.addStatement(new Insert<ShortlistJoin>("SHORT_LIST_JOIN", shortlistJoin));
+        shortlistJoin = new ShortlistJoin();
+        shortlistJoin.setShortListId(6);
+        shortlistJoin.setShortListPropertyID(2);
+        shortlistJoin.setShortListPostcode(2000);
+        dt.addStatement(new Insert<ShortlistJoin>("SHORT_LIST_JOIN", shortlistJoin));
+        shortlistJoin = new ShortlistJoin();
+        shortlistJoin.setShortListId(7);
+        shortlistJoin.setShortListPropertyID(3);
+        shortlistJoin.setShortListPostcode(2000);
+        dt.addStatement(new Insert<ShortlistJoin>("SHORT_LIST_JOIN", shortlistJoin));
+
+        dt.execute(Datastore.getDataStore(DB_NAME), new OnNonQueryComplete() {
+            @Override
+            public void onNonQueryComplete(int token, int updated) {
+
+            }
+
+            @Override
+            public void onNonQueryFailed(int token, DatabaseException e) {
+
+            }
+        });
+    }
+
     private void insert() {
 
         Datastore ds = Datastore.getDataStore(DB_NAME);
 
         Shortlist shortlist = new Shortlist();
-        shortlist.setIsFavourite(1);
+        shortlist.setIsFavourite(true);
         shortlist.setAddress("This is the property address");
         shortlist.setPostcode(2079);
         Insert<Shortlist> insert = new Insert("SHORT_LIST", shortlist);

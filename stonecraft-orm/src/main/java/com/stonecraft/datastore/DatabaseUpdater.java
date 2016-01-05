@@ -75,7 +75,7 @@ public class DatabaseUpdater {
 			datamapTable.addColumn(new SQLiteColumn(
 				DBConstants.COLUMN_IS_NULLABLE, DBConstants.DATATYPE_INT_BOOLEAN, COLUMN_LENGTH_INTEGER, false));
 			datamapTable.addColumn(new SQLiteColumn(
-					DBConstants.COLUMN_URI, DBConstants.DATATYPE_INT_STRING, COLUMN_LENGTH_TEXT, false, false));
+					DBConstants.COLUMN_URI, DBConstants.DATATYPE_INT_STRING, COLUMN_LENGTH_TEXT, false, true));
 			
 			schemaSettingsTable.addColumn(new SQLiteColumn(
 				DBConstants.COLUMN_TYPE, DBConstants.DATATYPE_INT_STRING, COLUMN_LENGTH_TEXT, false));

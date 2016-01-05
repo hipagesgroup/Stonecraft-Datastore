@@ -10,7 +10,7 @@ package com.stonecraft.datastore.interaction;
  * @date $Date: 16/03/2012 01:50:39 $
  * @version $Revision: 1.0 $
  */
-public class RawSQLQuery extends Statement {
+public class RawSQLQuery extends Query {
 	private String myQuery;
 
 	/**

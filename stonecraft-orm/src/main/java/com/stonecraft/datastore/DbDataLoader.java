@@ -4,8 +4,8 @@ import android.content.Context;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.os.CancellationSignal;
 import android.support.v4.os.OperationCanceledException;
+import android.text.TextUtils;
 
-import com.stonecraft.datastore.Datastore;
 import com.stonecraft.datastore.exceptions.DatabaseException;
 import com.stonecraft.datastore.interaction.Query;
 
@@ -40,8 +40,11 @@ public class DbDataLoader<T> extends AsyncTaskLoader<T> {
         }
 
         Datastore ds = Datastore.getDataStore(myDbName);
-        getContext().getContentResolver().registerContentObserver(ds.getTableUri(
-                myQuery.getTable()), false, myObserver);
+        if(!TextUtils.isEmpty(ds.getTableUri(
+                myQuery.getTable()).toString())) {
+            getContext().getContentResolver().registerContentObserver(ds.getTableUri(
+                    myQuery.getTable()), false, myObserver);
+        }
 
         T result = null;
         try {

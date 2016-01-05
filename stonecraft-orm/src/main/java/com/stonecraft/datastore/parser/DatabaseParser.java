@@ -92,12 +92,9 @@ public class DatabaseParser extends AsyncTask<InputStream, Void, DbSchemaModel>{
 			e.printStackTrace();
 		}
 
-		return mySchema;
-	}
+		myOnSchemaModelCreated.OnSchemaModelCreated(mySchema);
 
-	@Override
-	protected void onPostExecute(DbSchemaModel dbSchemaModel) {
-		myOnSchemaModelCreated.OnSchemaModelCreated(dbSchemaModel);
+		return mySchema;
 	}
 
 	public DbSchemaModel parse(String databaseLocation) {
@@ -226,33 +223,31 @@ public class DatabaseParser extends AsyncTask<InputStream, Void, DbSchemaModel>{
 		 */
 		private DatabaseColumn buildCol() {
 			DatabaseColumn dbColumn = null;
-			try {
-				String name = myColumnValues.get(NAME);
-				int type = DatabaseUtils.getIntDatatype(StringUtils
-						.getStringNotNull(myColumnValues.get(TYPE)));
-				int length = Integer.parseInt(StringUtils
-						.getStringNotNull(myColumnValues.get(LENGTH)));
-				boolean primary = StringUtils.getStringNotNull(
-						myColumnValues.get(PRIMARY)).equalsIgnoreCase(
-						Boolean.TRUE.toString());
-				boolean autoIncrement = StringUtils.getStringNotNull(
-						myColumnValues.get(AUTOINCREMENT)).equalsIgnoreCase(
-						Boolean.TRUE.toString());
-				boolean nullable = StringUtils.getStringNotNull(
-						myColumnValues.get(NULLABLE)).equalsIgnoreCase(
-						Boolean.TRUE.toString());
-				String defaultValue = myColumnValues.get(DEFAULT);
+			String name = myColumnValues.get(NAME);
+			int type = DatabaseUtils.getIntDatatype(StringUtils
+					.getStringNotNull(myColumnValues.get(TYPE)));
+			String lengthString = StringUtils
+					.getStringNotNull(myColumnValues.get(LENGTH));
+			int length = 0;
+			if(TextUtils.isDigitsOnly(lengthString)) {
+				length = Integer.parseInt(lengthString);
+			}
 
-				dbColumn = new SQLiteColumn(name, type,
-						length, primary, nullable, autoIncrement);
-				if(!TextUtils.isEmpty(defaultValue)) {
-					dbColumn.setDefaultValue(defaultValue);
-				}
-			} catch (Throwable e) {
-				// TODO
-				// throw cannot complete exception
-				System.out.println("Failed to create Column " + e);
-				e.printStackTrace();
+			boolean primary = StringUtils.getStringNotNull(
+					myColumnValues.get(PRIMARY)).equalsIgnoreCase(
+					Boolean.TRUE.toString());
+			boolean autoIncrement = StringUtils.getStringNotNull(
+					myColumnValues.get(AUTOINCREMENT)).equalsIgnoreCase(
+					Boolean.TRUE.toString());
+			boolean nullable = StringUtils.getStringNotNull(
+					myColumnValues.get(NULLABLE)).equalsIgnoreCase(
+					Boolean.TRUE.toString());
+			String defaultValue = myColumnValues.get(DEFAULT);
+
+			dbColumn = new SQLiteColumn(name, type,
+					length, primary, nullable, autoIncrement);
+			if(!TextUtils.isEmpty(defaultValue)) {
+				dbColumn.setDefaultValue(defaultValue);
 			}
 
 			return dbColumn;

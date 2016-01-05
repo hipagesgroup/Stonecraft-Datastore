@@ -1,10 +1,10 @@
 package com.stonecraft.datastore;
 
+import com.stonecraft.datastore.exceptions.DatabaseException;
+
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
-
-import com.stonecraft.datastore.exceptions.DatabaseException;
 
 /**
  * This interface contains the methods required for interacting with the data
@@ -27,6 +27,12 @@ public interface RSData extends Iterator<RSData> {
 	 * @return
 	 */
 	public int getCount();
+
+	/**
+	 * This method returns the number of columns in the resultSet
+	 * @return
+	 */
+	public int getColumnCount();
 
 	/**
 	 * This method moves the position of the result set to the passed in

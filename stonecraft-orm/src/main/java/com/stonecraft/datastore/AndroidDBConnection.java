@@ -13,7 +13,6 @@ import com.stonecraft.datastore.interaction.Delete;
 import com.stonecraft.datastore.interaction.Insert;
 import com.stonecraft.datastore.interaction.Join;
 import com.stonecraft.datastore.interaction.Query;
-import com.stonecraft.datastore.interaction.Statement;
 import com.stonecraft.datastore.interaction.Update;
 import com.stonecraft.datastore.interfaces.IDBConnector;
 import com.stonecraft.datastore.interfaces.ISchemaCreator;
@@ -157,8 +156,8 @@ public class AndroidDBConnection implements IDBConnector {
 
 	public int delete(Delete delete) throws DatabaseException {
 		int deleteCount = myDBOpenHelper.getWritableDatabase().delete(
-				delete.getTable(), delete.getWhereClause(),
-				getArguments(delete.getArguments()));
+                delete.getTable(), delete.getWhereClause(),
+                getArguments(delete.getArguments()));
 		DatabaseTable table = myDbSchema.getTable(delete.getTable());
 		if(table != null) {
 			myAppContext.getContentResolver().notifyChange(table.getUri(), null, false);
@@ -304,6 +303,10 @@ public class AndroidDBConnection implements IDBConnector {
 					newSchemaColumn.getType() == DBConstants.DATATYPE_INT_BOOLEAN ||
 						newSchemaColumn.getType() == DBConstants.DATATYPE_INT_DATETIME)){
 				return true;
+			} else if(column.getType() == newSchemaColumn.getType()){
+				if(!column.isNullable() && newSchemaColumn.isNullable()) {
+					return true;
+				}
 			}
 		}
 		return false;
@@ -443,7 +446,8 @@ public class AndroidDBConnection implements IDBConnector {
 		statementBuilder.append(DBConstants.SELECT);
 		StringBuilder colBuilder = new StringBuilder();
 		if(query.getColumns() == null || query.getColumns().length == 0){
-			colBuilder.append("*");
+			colBuilder.append(getColumnClause(query));
+//            colBuilder.append("*");
 		} else {
 			
 			for(String column : query.getColumns()){
@@ -482,7 +486,7 @@ public class AndroidDBConnection implements IDBConnector {
 		return statementBuilder.toString();
 	}
 	
-	private String getJoinClause(String table, Statement statement) {
+	private String getJoinClause(String table, Query statement) {
 		StringBuilder joinBuilder = new StringBuilder(" ");
 		joinBuilder.append(table);
 		
@@ -527,6 +531,65 @@ public class AndroidDBConnection implements IDBConnector {
 		
 		return joinBuilder.toString();
 	}
+
+    /**
+     * This method returns the column clause in the format of "table.columnName AS table.columnName"
+	 *
+	 * This method will also add the joined table columns if the query contains any joins.
+	 *
+	 * NOTE: If the query contains it's own columns it is expected the query will have the columns
+	 * in the correct format of table.column name for joins.
+	 *
+     * @param query
+     * @return
+     */
+    public String getColumnClause(Query query) {
+		StringBuilder columnClause = new StringBuilder();
+
+		String[] columns = query.getColumns();
+		if(columns != null && columns.length > 0) {
+			return getColumnClause(query.getTable(), columns);
+		}
+
+		String mainTable = getColumnClause(query.getTable(), null);
+		if(!query.getJoins().isEmpty()) {
+            columnClause.append(", ");
+			for(Join join : query.getJoins()){
+				columnClause.append(getColumnClause(join.getTable(), null));
+			}
+		}
+		return mainTable + " " + columnClause.toString();
+    }
+
+    /**
+     * This method returns the column clause in the format of "table.columnName AS table.columnName
+	 *
+	 * This method is mainly used for raw sql queries where a join is present so that the column can
+	 * be referenced after the query has been executed.
+     *
+     * @param tableName
+     * @return
+     */
+    public String getColumnClause(String tableName, String[] columns) {
+        DatabaseTable table = myDbSchema.getTable(tableName);
+        StringBuilder columnClause = new StringBuilder();
+		if(columns != null && columns.length > 0) {
+			for(String column : columns) {
+				columnClause.append(column + " AS " + column);
+			}
+		}
+        for(Entry<String, DatabaseColumn> entry : table.getColumns().entrySet()) {
+            if(columnClause.length() > 0) {
+                columnClause.append(", ");
+            }
+
+            String key = tableName + "." + entry.getKey();
+            columnClause.append(key + " AS " +
+					DatabaseUtils.getDatabaseAsName(tableName, entry.getKey()));
+        }
+
+        return columnClause.toString();
+    }
 
 	/**
 	 * This class is the android implementation of RSData
@@ -593,11 +656,14 @@ public class AndroidDBConnection implements IDBConnector {
 		@Override
 		public int getIntValue(String column) throws DatabaseException {
 			int colIndex = getCursorIndex(column);
-			boolean isNull = myCursor.isNull(colIndex);
 			return myCursor.getInt(colIndex);
 		}
 
-		@Override
+        public int getColumnCount() {
+            return myCursor.getColumnCount();
+        }
+
+        @Override
 		public long getLongValue(String column) throws DatabaseException {
 			int colIndex = getCursorIndex(column);
 			return myCursor.getLong(colIndex);

@@ -3,13 +3,12 @@
  */
 package com.stonecraft.datastore;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import com.stonecraft.datastore.interfaces.IDBConnector;
+import com.stonecraft.datastore.exceptions.DatabaseException;
 import com.stonecraft.datastore.interfaces.OnNonQueryComplete;
 import com.stonecraft.datastore.view.DatabaseTable;
-import com.stonecraft.datastore.exceptions.DatabaseException;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This class
@@ -28,9 +27,9 @@ public class CreateTableTask extends DatabaseTask {
 	private List<OnNonQueryComplete> myStmtListeners;
 	private int myResult;
 	
-	public CreateTableTask(int taskId, int token, IDBConnector conn,
+	public CreateTableTask(int taskId, int token, Datastore datastore,
 		DatabaseTable table){
-		super(taskId, token, conn);
+		super(taskId, token, datastore);
 		myTable = table;
 		myStmtListeners = new ArrayList<OnNonQueryComplete>();
 		myResult = TABLE_NOT_CREATED;
@@ -44,7 +43,7 @@ public class CreateTableTask extends DatabaseTask {
 
 		try{
 			String createStatement = myTable.getCreateTableStmt();
-			myConnection.executeRawStatement(createStatement);
+			myDatastore.getActiveDatabase().executeRawStatement(createStatement);
 			myResult = TABLE_CREATED;
 			notifyStmtListeners(null);
 		} catch (DatabaseException e) {

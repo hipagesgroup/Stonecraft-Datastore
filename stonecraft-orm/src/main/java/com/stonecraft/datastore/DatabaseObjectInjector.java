@@ -8,7 +8,6 @@ import android.graphics.BitmapFactory;
 import android.support.annotation.Nullable;
 
 import com.stonecraft.datastore.exceptions.DatabaseException;
-import com.stonecraft.datastore.interaction.Query;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
@@ -16,6 +15,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * This class injects the data into the passed in class
@@ -28,10 +29,14 @@ import java.util.Date;
  */
 public class DatabaseObjectInjector {
 
-    private Query myQuery;
+    private boolean myIsJoinedQuery;
+    private Map<String, Field[]> myClassFields;
+    private Map<Field, Annotation> myAnnotations;
 
-    public DatabaseObjectInjector(Query query) {
-        myQuery = query;
+    public DatabaseObjectInjector(QueryBase query) {
+        myIsJoinedQuery = query.getJoins().isEmpty();
+        myClassFields = new HashMap<>();
+        myAnnotations = new HashMap<>();
     }
 
     /**
@@ -79,16 +84,22 @@ public class DatabaseObjectInjector {
             throws DatabaseException, NoSuchMethodException, IllegalAccessException,
             InvocationTargetException, InstantiationException {
         try {
-            Field[] fields = classOfT.getDeclaredFields();
+            Field[] fields = null;
+            if(myClassFields.containsKey(classOfT.getName())) {
+                fields = myClassFields.get(classOfT.getName());
+            } else {
+                fields = classOfT.getDeclaredFields();
+                myClassFields.put(classOfT.getName(), fields);
+            }
+
             T rowClass = classOfT.getConstructor().newInstance();
 
             for(Field field : fields) {
-                Annotation annotation = field.getAnnotation(DbColumnName.class);
-                Annotation tableAnnotation = field.getAnnotation(DbTableName.class);
-                if(tableAnnotation instanceof DbTableName){
+                Annotation annotation = getAnnotation(field);
+                if(annotation instanceof DbTableName){
                     field.setAccessible(true);
                     field.set(rowClass, getInjectedClass(data, field.getType(),
-                            ((DbTableName) tableAnnotation).value()));
+                            ((DbTableName) annotation).value()));
 
                 } else if(annotation instanceof DbColumnName){
                     DbColumnName InjectAnnotation = (DbColumnName)annotation;
@@ -103,6 +114,24 @@ public class DatabaseObjectInjector {
                     "with the data for this query", e);
         }
 	}
+
+    private Annotation getAnnotation(Field field) {
+        if(myAnnotations.containsKey(field)) {
+            return myAnnotations.get(field);
+        }
+
+        Annotation annotation = field.getAnnotation(DbTableName.class);
+        if(annotation != null) {
+            myAnnotations.put(field, annotation);
+            return annotation;
+        }
+
+        annotation = field.getAnnotation(DbColumnName.class);
+        //it's ok to add a null to myAnnotations so that we don't try to get it second time around
+        myAnnotations.put(field, annotation);
+
+        return annotation;
+    }
 
 	/**
 	 * This method creates an instance of the passed in class and populates it with the data
@@ -124,13 +153,17 @@ public class DatabaseObjectInjector {
 	}
 
     private String getColumnKey(String table, String column) {
-        if(myQuery.getJoins().isEmpty() || column.contains(
-                DatabaseUtils.getTableColumnSeparator())) {
-            return DatabaseUtils.normaliseTableColumnAsName(column);
+        String columnKey = null;
+        if(column.contains(DatabaseUtils.getTableColumnSeparator())) {
+            columnKey = DatabaseUtils.normaliseTableColumnAsName(column);
+        } else if(myIsJoinedQuery) {
+            columnKey = column;
         } else {
             //joins have had their column reference set as 'tablenameColumnname'
-            return DatabaseUtils.getDatabaseAsName(table, column);
+            columnKey = DatabaseUtils.getDatabaseAsName(table, column);
         }
+
+        return columnKey;
     }
 
     private <T> void injectValue(RSData data, T rowClass, Field field,

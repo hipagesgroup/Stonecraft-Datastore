@@ -4,6 +4,7 @@ import android.net.Uri;
 
 import com.stonecraft.datastore.DbSchemaModel;
 import com.stonecraft.datastore.RSData;
+import com.stonecraft.datastore.RowCountQuery;
 import com.stonecraft.datastore.interaction.Delete;
 import com.stonecraft.datastore.interaction.Insert;
 import com.stonecraft.datastore.interaction.Query;
@@ -99,6 +100,8 @@ public interface IDBConnector {
 	 * @throws DatabaseException
 	 */
 	public RSData query(Query query) throws DatabaseException;
+
+	public long queryNumEntries(RowCountQuery query);
 
 	/**
 	 * This method inserts data into the database

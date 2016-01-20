@@ -4,7 +4,6 @@ import com.stonecraft.datastore.exceptions.DatabaseException;
 import com.stonecraft.datastore.interaction.Query;
 import com.stonecraft.datastore.interaction.RawSQLQuery;
 import com.stonecraft.datastore.interfaces.IDBConnector;
-import com.stonecraft.datastore.interfaces.OnQueryComplete;
 
 /**
  * This class is used for tasks that are to be run on a database. It handles
@@ -19,12 +18,12 @@ import com.stonecraft.datastore.interfaces.OnQueryComplete;
  */
 class DatabaseQueryTask extends DatabaseTask {
 	private Query myQuery;
-	private OnQueryComplete myQueryListener;
+	private QueryComplete myQueryListener;
 	private Class myInjectorClass;
-	private Object[] myResult;
+	private Object myResult;
 
 	public DatabaseQueryTask(int taskId, int token, Datastore datastore,
-		Query query) {
+			Query query) {
 		super(taskId, token, datastore);
 		myQuery = query;
 	}
@@ -43,7 +42,12 @@ class DatabaseQueryTask extends DatabaseTask {
 	 */
 	@Override
 	public void startTask() throws DatabaseException {
-		myResult = startTask(myInjectorClass);
+		if(myQuery instanceof Query) {
+			myResult = startTask(myInjectorClass);
+		} else {
+
+		}
+
 	}
 
     /**
@@ -61,12 +65,11 @@ class DatabaseQueryTask extends DatabaseTask {
 			IDBConnector connector = myDatastore.getActiveDatabase();
             if (myQuery instanceof Query) {
                 data = connector.query((Query)myQuery);
-                return (T[])parseQuery(data, classOfT);
+                return (T[])parseQuery((Query)myQuery, data, classOfT);
             } else if (myQuery instanceof RawSQLQuery) {
                 data = connector.executeRawQuery((((RawSQLQuery)myQuery)).getQuery());
-                return (T[])parseQuery(data, classOfT);
-            }
-            else {
+                return (T[])parseQuery((RawSQLQuery)myQuery, data, classOfT);
+            } else {
                 throw new DatabaseException("Unknown statement type "
                         + myQuery.getClass().getSimpleName()
                         + ". Must be either " + Query.class.getSimpleName()
@@ -76,12 +79,14 @@ class DatabaseQueryTask extends DatabaseTask {
 			if(data != null) {
 				data.close();
 			}
-            myQueryListener.onQueryFailed(myToken, e);
+
+			if(myQueryListener != null) {
+				myQueryListener.onQueryFailed(myToken, e);
+			}
+            throw e;
         } finally {
             notifyTaskListeners();
         }
-
-        return null;
     }
 
 	/**
@@ -93,24 +98,30 @@ class DatabaseQueryTask extends DatabaseTask {
 			if (e != null) {
 				myQueryListener.onQueryFailed(myToken, e);
 			} else {
-				myQueryListener.onQueryComplete(myToken, myResult);
+				if(myQueryListener instanceof OnUnparsedQueryComplete) {
+					((OnUnparsedQueryComplete) myQueryListener).onQueryComplete(
+							myToken, (RSData)myResult);
+				} else {
+					((OnQueryComplete)myQueryListener).onQueryComplete(myToken, (Object[])myResult);
+				}
+
 			}
 		}
 	}
 
-	private Object parseQuery(RSData data, Class classOfT) throws DatabaseException {
+	private Object parseQuery(Query query, RSData data, Class classOfT) throws DatabaseException {
 
-		if(classOfT.getName().equals(RSData.class.getName())) {
-			return new RSData[] {data};
+		if(myQueryListener instanceof OnUnparsedQueryComplete) {
+			return data;
 		}
 
 		Object[] result = null;
 		if(myQueryListener != null) {
-			result = myQueryListener.parseData(data);
+			result = ((OnQueryComplete)myQueryListener).parseData(data);
 		}
 
 		if(result == null) {
-            return new DatabaseObjectInjector(myQuery).inject(data, classOfT);
+            return new DatabaseObjectInjector(query).inject(data, classOfT);
 		}
 
 		data.close();
@@ -125,6 +136,10 @@ class DatabaseQueryTask extends DatabaseTask {
 	 * @param listener
 	 */
 	public void setOnQueryCompleteListener(OnQueryComplete listener) {
+		if(listener instanceof QueryComplete) {
+			throw new RuntimeException("QueryComplete interface should not be used directly. " +
+					"Instead use OnQueryComplete or OnUnparsedQueryComplete");
+		}
 		myQueryListener = listener;
 	}
 }

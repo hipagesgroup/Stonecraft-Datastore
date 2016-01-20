@@ -120,6 +120,18 @@ public class AndroidDBConnection implements IDBConnector {
 		}
 	}
 
+	@Override
+	public long queryNumEntries(RowCountQuery query) {
+		if(query.getSelectionArgs() != null) {
+			List<String> args = query.getSelectionArgs();
+			return android.database.DatabaseUtils.queryNumEntries(
+					myDBOpenHelper.getReadableDatabase(), query.getTable(), query.getWhereClause(),
+					args.toArray(new String[args.size()]));
+		}
+		return android.database.DatabaseUtils.queryNumEntries(
+				myDBOpenHelper.getReadableDatabase(), query.getTable(), query.getWhereClause());
+	}
+
 	public void insert(Insert insert) throws DatabaseException {
 		ContentValues cv = new ContentValues();
 		if(insert.getInsertRowClasses() != null) {
@@ -142,7 +154,7 @@ public class AndroidDBConnection implements IDBConnector {
 		if(update.getUpdateClass() != null) {
 			cv = getContentValues(update.getUpdateClass());
 		} else {
-			cv = getContentValues(update.getValues());
+			cv = getContentValues(update.getValues().entrySet());
 		}
 
 		int updateCount = myDBOpenHelper.getWritableDatabase().update(
@@ -156,8 +168,8 @@ public class AndroidDBConnection implements IDBConnector {
 
 	public int delete(Delete delete) throws DatabaseException {
 		int deleteCount = myDBOpenHelper.getWritableDatabase().delete(
-                delete.getTable(), delete.getWhereClause(),
-                getArguments(delete.getArguments()));
+				delete.getTable(), delete.getWhereClause(),
+				getArguments(delete.getArguments()));
 		DatabaseTable table = myDbSchema.getTable(delete.getTable());
 		if(table != null) {
 			myAppContext.getContentResolver().notifyChange(table.getUri(), null, false);
@@ -353,43 +365,42 @@ public class AndroidDBConnection implements IDBConnector {
 	}
 
     private void addToContentValues(ContentValues cv, String columnName, Object value) throws DatabaseException {
-        if (value != null) {
-            if (value instanceof Integer) {
-                cv.put(columnName, (Integer) value);
-            } else if (value instanceof Boolean) {
-                cv.put(columnName, (Boolean) value);
-            } else if (value instanceof Double) {
-                cv.put(columnName, (Double) value);
-            } else if (value instanceof Float) {
-                cv.put(columnName, (Float) value);
-            } else if (value instanceof Long) {
-                cv.put(columnName, (Long) value);
-            } else if (value instanceof String) {
-                cv.put(columnName, (String) value);
-            } else if (value instanceof Date) {
-                long timeInMillis = ((Date) value).getTime();
-                cv.put(columnName, timeInMillis);
-            } else if (value instanceof Calendar) {
-                long timeInMillis = ((Calendar) value).getTimeInMillis();
-                cv.put(columnName, timeInMillis);
-            } else if(value instanceof byte[]) {
-                cv.put(columnName, (byte[]) value);
-			} else if(value instanceof Bitmap) {
-				Bitmap bmp = (Bitmap)value;
-				ByteArrayOutputStream stream = new ByteArrayOutputStream();
-				bmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
-				byte[] byteArray = stream.toByteArray();
+        if(value == null) {
+            cv.putNull(columnName);
+        } else if (value instanceof Integer) {
+			cv.put(columnName, (Integer) value);
+		} else if (value instanceof Boolean) {
+			cv.put(columnName, (Boolean) value);
+		} else if (value instanceof Double) {
+			cv.put(columnName, (Double) value);
+		} else if (value instanceof Float) {
+			cv.put(columnName, (Float) value);
+		} else if (value instanceof Long) {
+			cv.put(columnName, (Long) value);
+		} else if (value instanceof String) {
+			cv.put(columnName, (String) value);
+		} else if (value instanceof Date) {
+			long timeInMillis = ((Date) value).getTime();
+			cv.put(columnName, timeInMillis);
+		} else if (value instanceof Calendar) {
+			long timeInMillis = ((Calendar) value).getTimeInMillis();
+			cv.put(columnName, timeInMillis);
+		} else if(value instanceof byte[]) {
+			cv.put(columnName, (byte[]) value);
+		} else if(value instanceof Bitmap) {
+			Bitmap bmp = (Bitmap)value;
+			ByteArrayOutputStream stream = new ByteArrayOutputStream();
+			bmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
+			byte[] byteArray = stream.toByteArray();
 
-				cv.put(columnName, byteArray);
-            }  else if(value instanceof Uri) {
-				cv.put(columnName, value.toString());
-			}
-            else {
-                throw new DatabaseException("Datatype "
-                        + value.getClass().getName() + " is not a valid "
-                        + "datatype");
-            }
-        }
+			cv.put(columnName, byteArray);
+		}  else if(value instanceof Uri) {
+			cv.put(columnName, value.toString());
+		} else {
+			throw new DatabaseException("Datatype "
+					+ value.getClass().getName() + " is not a valid "
+					+ "datatype");
+		}
     }
 
     private ContentValues getContentValues(Object row) throws DatabaseException{
@@ -403,7 +414,9 @@ public class AndroidDBConnection implements IDBConnector {
                     DbColumnName colNameAnnotation = (DbColumnName) annotation;
                     String column = colNameAnnotation.value();
                     Object value = field.get(row);
-					addToContentValues(cv, column, value);
+					if(value != null) {
+						addToContentValues(cv, column, value);
+					}
                 }
             }
         } catch (IllegalAccessException e) {
@@ -766,7 +779,7 @@ public class AndroidDBConnection implements IDBConnector {
 		 */
 		@Override
 		public boolean hasColumn(String columnName) {
-			return myCursor.getColumnIndex(columnName) >= 0;
+            return myCursor.getColumnIndex(columnName) >= 0;
 		}
 	}
 }

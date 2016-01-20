@@ -2,6 +2,7 @@ package com.stonecraft.datastore;
 
 import android.content.Context;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -13,7 +14,6 @@ import com.stonecraft.datastore.interaction.Update;
 import com.stonecraft.datastore.interfaces.IDBConnector;
 import com.stonecraft.datastore.interfaces.ISchemaCreator;
 import com.stonecraft.datastore.interfaces.OnNonQueryComplete;
-import com.stonecraft.datastore.interfaces.OnQueryComplete;
 import com.stonecraft.datastore.interfaces.OnTaskCompleteListener;
 import com.stonecraft.datastore.interfaces.Tasker;
 import com.stonecraft.datastore.parser.DatabaseParser;
@@ -59,7 +59,7 @@ public class Datastore implements OnTaskCompleteListener {
 	private boolean myIsAttemptReconnect = true;
     //This latch ensures that an instance of the datastore can't be returned while the parsing
     //of a db schema is in progress.
-    private static CountDownLatch myParsingLatch;
+    private static volatile CountDownLatch myParsingLatch;
 	private final static AtomicInteger myParsingCount = new AtomicInteger(0);
 
 	/**
@@ -171,15 +171,15 @@ public class Datastore implements OnTaskCompleteListener {
      * @param listener
      * @throws DatabaseException
      */
-	public static void createConnection(final Context context, final InputStream databaseXml,
+	public synchronized static void createConnection(final Context context, final InputStream databaseXml,
 			@Nullable final OnConnectionCreated listener)
 			throws DatabaseException {
-			myParsingCount.incrementAndGet();
-			if (myParsingLatch == null) {
-				myParsingLatch = new CountDownLatch(1);
-			}
+        myParsingCount.incrementAndGet();
+        if (myParsingLatch == null || myParsingLatch.getCount() == 0) {
+            myParsingLatch = new CountDownLatch(1);
+        }
 
-			new DatabaseParser(new DatabaseParser.OnSchemaModelCreated() {
+        DatabaseParser parser = new DatabaseParser(new DatabaseParser.OnSchemaModelCreated() {
 				@Override
 				public void OnSchemaModelCreated(DbSchemaModel schema) {
                     IDBConnector connector = new AndroidDBConnection(context, schema, listener);
@@ -189,7 +189,9 @@ public class Datastore implements OnTaskCompleteListener {
 						myParsingLatch.countDown();
 					}
 				}
-			}).execute(databaseXml);
+			});
+        parser.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, databaseXml);
+        Log.d("createConnection", "Creating connection");
 	}
 
 	private static void setConnection(IDBConnector connection) {
@@ -236,12 +238,14 @@ public class Datastore implements OnTaskCompleteListener {
 	 * clean up and open connections
 	 */
 	public static void closeAll() throws DatabaseException {
-		for (Map.Entry<String, IDBConnector> entry : myDBConnections.entrySet()) {
-			IDBConnector conn = entry.getValue();
-			if (conn.isOpen()) {
-				conn.close();
-			}
-		}
+        if(myDBConnections != null) {
+            for (Map.Entry<String, IDBConnector> entry : myDBConnections.entrySet()) {
+                IDBConnector conn = entry.getValue();
+                if (conn.isOpen()) {
+                    conn.close();
+                }
+            }
+        }
 	}
 
 	/**
@@ -264,7 +268,7 @@ public class Datastore implements OnTaskCompleteListener {
 	 * @param stmt
 	 * @param listener
 	 */
-	public void executeQuery(int token, Query stmt, OnQueryComplete listener) {
+	public void executeQuery(int token, QueryBase stmt, OnQueryComplete listener) {
 
         Method[] methods = listener.getClass().getMethods();
 		Class injectorClass = Object.class;
@@ -321,7 +325,7 @@ public class Datastore implements OnTaskCompleteListener {
 				"Attempt to reopen an already closed database object. "
 				+ "Ensure a connection to the database is currently valid and open");
 		}
-		
+
 		int taskId = new AtomicInteger().incrementAndGet();
 		DatabaseQueryTask task = new DatabaseQueryTask(taskId, DEFAULT_TOKEN,
 				this, stmt);

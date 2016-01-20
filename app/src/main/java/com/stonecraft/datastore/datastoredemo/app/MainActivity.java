@@ -25,14 +25,15 @@ import com.stonecraft.database.datastoredemo.app.R;
 import com.stonecraft.datastore.Datastore;
 import com.stonecraft.datastore.DatastoreTransaction;
 import com.stonecraft.datastore.DbDataLoader;
+import com.stonecraft.datastore.OnQueryComplete;
 import com.stonecraft.datastore.RSData;
+import com.stonecraft.datastore.RowCountQuery;
 import com.stonecraft.datastore.exceptions.CannotCompleteException;
 import com.stonecraft.datastore.exceptions.DatabaseException;
 import com.stonecraft.datastore.interaction.Insert;
 import com.stonecraft.datastore.interaction.Join;
 import com.stonecraft.datastore.interaction.Query;
 import com.stonecraft.datastore.interfaces.OnNonQueryComplete;
-import com.stonecraft.datastore.interfaces.OnQueryComplete;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -72,7 +73,7 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        getSupportLoaderManager().initLoader(0, null, this);
+//        getSupportLoaderManager().initLoader(0, null, this);
         populateTables();
         myTxbStatus = (TextView)findViewById(R.id.txbStatus);
 
@@ -250,14 +251,13 @@ public class MainActivity extends AppCompatActivity
 
     private void query() {
         Datastore ds = Datastore.getDataStore(DB_NAME);
-        Query query = new Query("SHORT_LIST");
+        RowCountQuery countQuery = new RowCountQuery("SHORT_LIST");
 
         try{
 
-            RSData rsdata = ds.executeQuery(query, RSData.class)[0];
-            myTxbStatus.setText("Datamap record count " + rsdata.getCount());
-            final int count = rsdata.getCount();
-            rsdata.close();
+            final long count = (long)ds.executeAggregateQuery(countQuery);
+            myTxbStatus.setText("Datamap record count " + count);
+            Query query = new Query("SHORT_LIST");
             ds.executeQuery(0, query, new OnQueryComplete<Shortlist>() {
 
                 @Override
@@ -313,6 +313,7 @@ public class MainActivity extends AppCompatActivity
                     public void run() {
                         ImageView imgDisplay = (ImageView) findViewById(R.id.imgPhoto);
                         imgDisplay.setImageBitmap(items[0]);
+                        items[0].recycle();
                     }
                 });
             }

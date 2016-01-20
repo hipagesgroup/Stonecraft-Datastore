@@ -268,7 +268,7 @@ public class Datastore implements OnTaskCompleteListener {
 	 * @param stmt
 	 * @param listener
 	 */
-	public void executeQuery(int token, QueryBase stmt, OnQueryComplete listener) {
+	public void executeQuery(int token, Query stmt, OnQueryComplete listener) {
 
         Method[] methods = listener.getClass().getMethods();
 		Class injectorClass = Object.class;
@@ -331,6 +331,60 @@ public class Datastore implements OnTaskCompleteListener {
 				this, stmt);
 		
 		return task.startTask(classToInject);
+	}
+
+	/**
+	 * This method executes a Aggregate query on the database and returns the resultant
+	 * object. If an error occurs a DatabaseException is passed back in
+	 * the listener. The listener can be null, but if an exception occurs this
+	 * statement will fail silently.
+	 *
+	 * @param token
+	 * @param stmt
+	 * @param listener
+	 */
+	public void executeAggregateQuery(int token, AggregateQuery stmt, OnUnparsedQueryComplete listener) {
+		try{
+			if(!validateDBConnection()){
+				throw new DatabaseException(
+						"Attempt to reopen an already closed database object. "
+								+ "Ensure a connection to the database is currently valid and open");
+			}
+		}
+		catch (DatabaseException e) {
+			listener.onQueryFailed(token, e);
+		}
+		int taskId = new AtomicInteger().incrementAndGet();
+		AggregateQueryTask task = new AggregateQueryTask(taskId, DEFAULT_TOKEN,
+				this, stmt);
+
+		try {
+			executeStmt(task);
+		} catch (DatabaseException e) {
+			listener.onQueryFailed(token, e);
+		}
+	}
+
+	/**
+	 * This method executes a aggregate query on the database and returns the resultant
+	 * object. This method will always block the calling thread
+	 * regardless if this object has been set to block or not.
+	 *
+	 * @param stmt
+	 * @return
+	 * @throws DatabaseException
+	 */
+	public Object executeAggregateQuery(AggregateQuery stmt) throws DatabaseException {
+		if(!validateDBConnection()){
+			throw new DatabaseException(
+					"Attempt to reopen an already closed database object. "
+							+ "Ensure a connection to the database is currently valid and open");
+		}
+
+		int taskId = new AtomicInteger().incrementAndGet();
+		AggregateQueryTask task = new AggregateQueryTask(taskId, DEFAULT_TOKEN,
+				this, stmt);
+		return task.run();
 	}
 
 	/**

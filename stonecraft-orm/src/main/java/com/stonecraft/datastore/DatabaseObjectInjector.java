@@ -8,6 +8,7 @@ import android.graphics.BitmapFactory;
 import android.support.annotation.Nullable;
 
 import com.stonecraft.datastore.exceptions.DatabaseException;
+import com.stonecraft.datastore.interaction.Query;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
@@ -33,7 +34,7 @@ public class DatabaseObjectInjector {
     private Map<String, Field[]> myClassFields;
     private Map<Field, Annotation> myAnnotations;
 
-    public DatabaseObjectInjector(QueryBase query) {
+    public DatabaseObjectInjector(Query query) {
         myIsJoinedQuery = query.getJoins().isEmpty();
         myClassFields = new HashMap<>();
         myAnnotations = new HashMap<>();

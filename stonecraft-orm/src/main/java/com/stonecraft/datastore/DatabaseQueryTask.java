@@ -136,10 +136,6 @@ class DatabaseQueryTask extends DatabaseTask {
 	 * @param listener
 	 */
 	public void setOnQueryCompleteListener(OnQueryComplete listener) {
-		if(listener instanceof QueryComplete) {
-			throw new RuntimeException("QueryComplete interface should not be used directly. " +
-					"Instead use OnQueryComplete or OnUnparsedQueryComplete");
-		}
 		myQueryListener = listener;
 	}
 }

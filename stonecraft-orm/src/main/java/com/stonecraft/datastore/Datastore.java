@@ -343,7 +343,7 @@ public class Datastore implements OnTaskCompleteListener {
 	 * @param stmt
 	 * @param listener
 	 */
-	public void executeAggregateQuery(int token, AggregateQuery stmt, OnUnparsedQueryComplete listener) {
+	public void executeAggregateQuery(int token, AggregateQuery stmt, OnAggregateQueryComplete listener) {
 		try{
 			if(!validateDBConnection()){
 				throw new DatabaseException(
@@ -357,6 +357,7 @@ public class Datastore implements OnTaskCompleteListener {
 		int taskId = new AtomicInteger().incrementAndGet();
 		AggregateQueryTask task = new AggregateQueryTask(taskId, DEFAULT_TOKEN,
 				this, stmt);
+        task.setOnQueryCompleteListener(listener);
 
 		try {
 			executeStmt(task);

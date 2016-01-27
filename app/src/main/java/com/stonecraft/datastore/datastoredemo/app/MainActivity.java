@@ -25,6 +25,7 @@ import com.stonecraft.database.datastoredemo.app.R;
 import com.stonecraft.datastore.Datastore;
 import com.stonecraft.datastore.DatastoreTransaction;
 import com.stonecraft.datastore.DbDataLoader;
+import com.stonecraft.datastore.OnAggregateQueryComplete;
 import com.stonecraft.datastore.OnQueryComplete;
 import com.stonecraft.datastore.RSData;
 import com.stonecraft.datastore.RowCountQuery;
@@ -257,6 +258,19 @@ public class MainActivity extends AppCompatActivity
 
             final long count = (long)ds.executeAggregateQuery(countQuery);
             myTxbStatus.setText("Datamap record count " + count);
+            ds.executeAggregateQuery(0, countQuery, new OnAggregateQueryComplete() {
+                @Override
+                public void onQueryFailed(int token, DatabaseException e) {
+
+                }
+
+                @Override
+                public void onQueryComplete(int token, Object result) {
+                    Log.d("TEST",
+                            "Threaded aggregate query result = " + result);
+                }
+            });
+
             Query query = new Query("SHORT_LIST");
             ds.executeQuery(0, query, new OnQueryComplete<Shortlist>() {
 

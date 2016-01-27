@@ -16,7 +16,7 @@ import com.stonecraft.datastore.interfaces.IDBConnector;
 public class AggregateQueryTask extends DatabaseTask {
 
     private AggregateQuery myQuery;
-    private OnUnparsedQueryComplete myQueryListener;
+    private OnAggregateQueryComplete myQueryListener;
     private Object myResult;
 
     public AggregateQueryTask(int taskId, int token, Datastore datastore,
@@ -46,11 +46,7 @@ public class AggregateQueryTask extends DatabaseTask {
      *
      * @param listener
      */
-    public void setOnQueryCompleteListener(OnUnparsedQueryComplete listener) {
-        if(listener instanceof QueryComplete) {
-            throw new RuntimeException("QueryComplete interface should not be used directly. " +
-                    "Instead use OnQueryComplete or OnUnparsedQueryComplete");
-        }
+    public void setOnQueryCompleteListener(OnAggregateQueryComplete listener) {
         myQueryListener = listener;
     }
 
@@ -64,7 +60,7 @@ public class AggregateQueryTask extends DatabaseTask {
                 myQueryListener.onQueryFailed(myToken, e);
             } else {
                 myQueryListener.onQueryComplete(
-                        myToken, (RSData) myResult);
+                        myToken, myResult);
             }
         }
     }

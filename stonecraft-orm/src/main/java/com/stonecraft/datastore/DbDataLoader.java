@@ -40,11 +40,6 @@ public class DbDataLoader<T> extends AsyncTaskLoader<T> {
         }
 
         Datastore ds = Datastore.getDataStore(myDbName);
-        if(!TextUtils.isEmpty(ds.getTableUri(
-                myQuery.getTable()).toString())) {
-            getContext().getContentResolver().registerContentObserver(ds.getTableUri(
-                    myQuery.getTable()), false, myObserver);
-        }
 
         T result = null;
         try {
@@ -88,6 +83,13 @@ public class DbDataLoader<T> extends AsyncTaskLoader<T> {
 
     @Override
     protected void onStartLoading() {
+        Datastore ds = Datastore.getDataStore(myDbName);
+        if(!TextUtils.isEmpty(ds.getTableUri(
+                myQuery.getTable()).toString())) {
+            getContext().getContentResolver().registerContentObserver(ds.getTableUri(
+                    myQuery.getTable()), false, myObserver);
+        }
+
         if (myResult != null) {
             deliverResult(myResult);
         }

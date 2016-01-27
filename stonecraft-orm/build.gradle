@@ -4,7 +4,7 @@ apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'maven-publish'
 
-def libVersion = '1.0.20'
+def libVersion = '1.0.22'
 
 android {
     compileSdkVersion 23
@@ -19,7 +19,7 @@ android {
     defaultConfig {
         minSdkVersion 16
         targetSdkVersion 23
-        versionCode 4
+        versionCode 5
         versionName libVersion
     }
     signingConfigs {

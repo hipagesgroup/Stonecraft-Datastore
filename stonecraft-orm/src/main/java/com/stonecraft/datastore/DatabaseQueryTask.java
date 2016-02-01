@@ -120,8 +120,14 @@ class DatabaseQueryTask extends DatabaseTask {
 			result = ((OnQueryComplete)myQueryListener).parseData(data);
 		}
 
+		ObjectInjector oi;
 		if(result == null) {
-            return new DatabaseObjectInjector(query).inject(data, classOfT);
+			if(query.getJoins().isEmpty()) {
+				oi = new QueryObjectInjector(query);
+			} else {
+				oi = new JoinObjectInjector(query);
+			}
+            return oi.inject(data, classOfT);
 		}
 
 		data.close();

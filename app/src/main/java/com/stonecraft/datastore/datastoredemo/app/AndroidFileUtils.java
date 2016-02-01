@@ -1,13 +1,13 @@
 package com.stonecraft.datastore.datastoredemo.app;
 
+import android.content.Context;
+
+import com.stonecraft.datastore.exceptions.CannotCompleteException;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.zip.ZipInputStream;
-
-import android.content.Context;
-
-import com.stonecraft.datastore.exceptions.CannotCompleteException;
 
 /**
  * This class extends FileUtils and contains the Android specific Utilities.
@@ -108,7 +108,7 @@ public class AndroidFileUtils extends FileUtils {
 		throws CannotCompleteException {
 		try
 		{
-			File db = new File(getDatabaseDir(context), dbName + ".db");
+			File db = new File(getDatabaseDir(context), dbName + ".sqlite");
 			
 			InputStream dbInput = new FileInputStream(db);
 			

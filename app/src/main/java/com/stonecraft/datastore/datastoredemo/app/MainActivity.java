@@ -236,18 +236,19 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void copyDB() {
-        try{
-            File extStore = new File(Environment.getExternalStorageDirectory(), "Datastore");
-            Log.d("TEST", extStore.getAbsolutePath());
-            AndroidFileUtils.copyDatabaseFrom(this, extStore, DB_NAME);
+        File dbOuputLocation = new File(Environment.getExternalStorageDirectory(), DB_NAME);
+        Log.d("TEST", "Coping Databaes to " + dbOuputLocation.getAbsolutePath());
+        Log.i(MainActivity.class.getSimpleName(), "DB will be copied to " +
+                dbOuputLocation.getAbsolutePath());
+
+        try {
+            AndroidFileUtils.copyDatabaseFrom(this, dbOuputLocation, DB_NAME);
+
             myTxbStatus.setText("DB Copied");
-        }
-        catch(CannotCompleteException e){
+        } catch (CannotCompleteException e) {
             Log.e("TEST copyDB", "" + e);
             myTxbStatus.setText("DB Copy failed");
         }
-
-
     }
 
     private void query() {
@@ -389,39 +390,33 @@ public class MainActivity extends AppCompatActivity
     private void testJoins() {
 
         Query query = new Query("SHORT_LIST");
-        Join join = new Join("SHORT_LIST_JOIN", Join.JOIN_INNER);
+        Join join = new Join("SHORT_LIST_JOIN", Join.JOIN_CROSS);
         join.addJoinExpression(new Pair<String, String>("SHORT_LIST", "PROPERTY_ID"),
             new Pair<String, String>("SHORT_LIST_JOIN", "PROPERTY_ID"));
         query.addJoins(join);
 
         Datastore ds = Datastore.getDataStore(DB_NAME);
-        ds.executeQuery(0, query, new OnQueryComplete<JoinTest>() {
+        ds.executeQuery(0, query, new OnQueryComplete<Shortlist>() {
 
             @Override
-            public void onQueryComplete(int token, JoinTest[] resultSet) {
+            public void onQueryComplete(int token, Shortlist[] resultSet) {
                 Shortlist list = null;
                 if(resultSet != null) {
-                    for(JoinTest test : resultSet) {
+                    for(Shortlist shortlist : resultSet) {
 
-                        if(list == null || test.getShortlist().getPropertyID() != list.getPropertyID()){
-                            list = test.getShortlist();
-                            Log.d("testJoins", "Shortlist " + list.getPropertyID() + " postcode " +
-                                    list.getPostcode());
+                        Log.d("testJoins", "join id " + shortlist.getPropertyID());
+                        for(ShortlistJoin join : shortlist.getShortlistJoins()) {
+                            Log.d("testJoins", "\tShortlist id " + join.getShortListPropertyID() +
+                                    " join id " + join.getShortListId() + " postcode " +
+                                    join.getShortListPostcode());
                         }
-
-                        ShortlistJoin join = test.getShortlistJoin();
-                        Log.d("testJoins", "\tShortlist id " + join.getShortListPropertyID() +
-                                " join id " + join.getShortListId() + " postcode " +
-                                join.getShortListPostcode());
-                        Log.d("testJoins", "\tjoin id " + test.getShortlist().getJoinId());
-
                     }
                 }
             }
 
             @Override
             public void onQueryFailed(int token, DatabaseException e) {
-
+                Log.e("testJoins", "join query failed " + e);
             }
         });
     }

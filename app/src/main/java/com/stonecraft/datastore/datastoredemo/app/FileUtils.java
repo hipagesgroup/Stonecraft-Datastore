@@ -1,5 +1,9 @@
 package com.stonecraft.datastore.datastoredemo.app;
 
+import android.content.Context;
+
+import com.stonecraft.datastore.exceptions.CannotCompleteException;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
@@ -13,10 +17,6 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-
-import android.content.Context;
-
-import com.stonecraft.datastore.exceptions.CannotCompleteException;
 
 /**
  * This class contains utilities for working with files. This class is a
@@ -72,7 +72,7 @@ public class FileUtils {
         File outputLocation = null;
         try {
             if (!saveDir.exists()) {
-                if (!saveDir.mkdirs()) {
+                if (!saveDir.mkdirs() || !saveDir.isDirectory()) {
                     throw new CannotCompleteException("Could not create directory file '" + saveDir + "'");
                 }
             }

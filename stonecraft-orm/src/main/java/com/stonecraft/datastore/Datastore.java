@@ -22,6 +22,7 @@ import com.stonecraft.datastore.view.DatabaseTable;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -102,6 +103,10 @@ public class Datastore implements OnTaskCompleteListener {
         }
 
 		return null;
+	}
+
+	public Calendar getLastTableUpdateTime(String tableName) {
+		return myActiveDatabase.getTableChangeDate(tableName);
 	}
 
 	/**
@@ -279,7 +284,6 @@ public class Datastore implements OnTaskCompleteListener {
 					if(clazz.getComponentType() != null) {
 						Class testClass = clazz.getComponentType();
 						if(!clazz.getComponentType().getName().equals(Object.class.getName())) {
-							Log.d("TEST", clazz.getComponentType().getName());
 							injectorClass = clazz.getComponentType();
 						}
 					}
@@ -434,6 +438,7 @@ public class Datastore implements OnTaskCompleteListener {
 		DatabaseNonQueryTask task = new DatabaseNonQueryTask(taskId,
 				DEFAULT_TOKEN, this, dt);
 		task.startTask();
+
 		return task.getTaskResult();
 	}
 	

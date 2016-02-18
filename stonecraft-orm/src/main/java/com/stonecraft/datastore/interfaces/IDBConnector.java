@@ -1,10 +1,12 @@
 package com.stonecraft.datastore.interfaces;
 
+import android.content.Context;
 import android.net.Uri;
 
 import com.stonecraft.datastore.DbSchemaModel;
 import com.stonecraft.datastore.RSData;
 import com.stonecraft.datastore.RowCountQuery;
+import com.stonecraft.datastore.exceptions.DatabaseException;
 import com.stonecraft.datastore.interaction.Delete;
 import com.stonecraft.datastore.interaction.Insert;
 import com.stonecraft.datastore.interaction.Query;
@@ -12,7 +14,8 @@ import com.stonecraft.datastore.interaction.Update;
 import com.stonecraft.datastore.view.DatabaseColumn;
 import com.stonecraft.datastore.view.DatabaseTable;
 import com.stonecraft.datastore.view.DatabaseViewFactory;
-import com.stonecraft.datastore.exceptions.DatabaseException;
+
+import java.util.Calendar;
 
 /**
  * This Interface contains the methods for all interaction to any database.
@@ -38,6 +41,12 @@ public interface IDBConnector {
 	 * @return
 	 */
 	public String getName();
+
+	/**
+	 * This method returns the context used to open this connection.
+	 * @return
+	 */
+	Context getContext();
 
 	/**
 	 * This method returns the version of the database the connection will be
@@ -217,4 +226,8 @@ public interface IDBConnector {
 	 * @return
 	 */
 	public Uri getTableUri(String tableName);
+
+	Calendar getTableChangeDate(String tableName);
+
+	void sendTableUpdateNotification(String tableName);
 }

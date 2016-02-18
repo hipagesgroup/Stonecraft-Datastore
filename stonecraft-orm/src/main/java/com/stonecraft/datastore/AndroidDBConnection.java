@@ -5,7 +5,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
-import android.graphics.Bitmap;
 import android.net.Uri;
 
 import com.stonecraft.datastore.exceptions.DatabaseException;
@@ -22,15 +21,13 @@ import com.stonecraft.datastore.view.DatabaseTable;
 import com.stonecraft.datastore.view.DatabaseViewFactory;
 import com.stonecraft.datastore.view.SqliteDBViewFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 /**
  * This class is the database connector for all Android database connection
@@ -61,25 +58,31 @@ public class AndroidDBConnection implements IDBConnector {
 	private DatabaseHelper myDBOpenHelper;
 	private DbSchemaModel myDbSchema;
 	private Context myAppContext;
+	private Map<Class, ContentValueCreator> myContentValueCreator;
 
 	public AndroidDBConnection(Context context, DbSchemaModel dbSchema,
 			OnConnectionCreated listener) {
 		myAppContext = context;
 		myDbSchema = dbSchema;
 		myDBOpenHelper = new DatabaseHelper(context, this, myDbSchema, listener);
+        myContentValueCreator = new HashMap<>();
 	}
 
 	public String getName() {
 		return myDbSchema.getName();
 	}
 
-	public int getVersion() {
+    @Override
+    public Context getContext() {
+        return myAppContext;
+    }
+
+    public int getVersion() {
 		return myDbSchema.getVersion();
 	}
 
 	public void startTransaction() throws DatabaseException {
 		myDBOpenHelper.getReadableDatabase().beginTransaction();
-
 	}
 
 	public void commit() throws DatabaseException {
@@ -133,32 +136,42 @@ public class AndroidDBConnection implements IDBConnector {
 	}
 
 	public void insert(Insert insert) throws DatabaseException {
-		ContentValues cv = new ContentValues();
+		ContentValues cv;
 		if(insert.getInsertRowClasses() != null) {
-			cv = getContentValues(insert.getInsertRowClasses());
+            ContentValueCreator cvCreator = myContentValueCreator.get(
+                    insert.getInsertRowClasses().getClass());
+            if(cvCreator == null) {
+                cvCreator = new ContentValueCreator();
+                myContentValueCreator.put(insert.getInsertRowClasses().getClass(),
+                        cvCreator);
+            }
+			cv = cvCreator.getContentValues(insert.getInsertRowClasses());
 		} else {
-			cv = getContentValues(insert.getValues().entrySet());
+			cv = new ContentValueCreator().getContentValues(
+                    insert.getValues().entrySet());
 		}
 
 		SQLiteDatabase db = myDBOpenHelper.getWritableDatabase();
 		db.insertOrThrow(insert.getTable(), null, cv);
-
-		DatabaseTable table = myDbSchema.getTable(insert.getTable());
-		if(table != null) {
-			myAppContext.getContentResolver().notifyChange(table.getUri(), null, false);
-		}
 	}
 
     public int update(Update update) throws DatabaseException {
-		ContentValues cv = new ContentValues();
+		ContentValues cv;
 		if(update.getUpdateClass() != null) {
-			cv = getContentValues(update.getUpdateClass());
+            ContentValueCreator cvCreator = myContentValueCreator.get(
+                    update.getUpdateClass());
+            if(cvCreator == null) {
+                cvCreator = new ContentValueCreator();
+                myContentValueCreator.put(update.getUpdateClass().getClass(),
+                        cvCreator);
+            }
+			cv = cvCreator.getContentValues(update.getUpdateClass());
 		} else {
-			cv = getContentValues(update.getValues().entrySet());
+			cv = new ContentValueCreator().getContentValues(update.getValues().entrySet());
 		}
 
 		int updateCount = myDBOpenHelper.getWritableDatabase().update(
-				update.getTable(), cv, update.getWhereClause(), getArguments(update.getArguments()));
+                update.getTable(), cv, update.getWhereClause(), getArguments(update.getArguments()));
 		DatabaseTable table = myDbSchema.getTable(update.getTable());
 		if(table != null) {
 			myAppContext.getContentResolver().notifyChange(table.getUri(), null, false);
@@ -226,6 +239,9 @@ public class AndroidDBConnection implements IDBConnector {
 	@Override
 	public Uri getTableUri(String tableName) {
 		try {
+            if(DatabaseUtils.isSystemTable(tableName)){
+                return null;
+            }
 			return myDbSchema.getTable(tableName).getUri();
 		} catch (NullPointerException e) {
 			NullPointerException exception = new NullPointerException(
@@ -234,6 +250,25 @@ public class AndroidDBConnection implements IDBConnector {
 			exception.setStackTrace(e.getStackTrace());
 			throw exception;
 		}
+	}
+
+	@Override
+	public Calendar getTableChangeDate(String tableName) {
+		DatabaseTable table = myDbSchema.getTable(tableName);
+		if(table != null) {
+			return table.getLastTableUpdate();
+		}
+		return null;
+	}
+
+	@Override
+	public void sendTableUpdateNotification(String tableName) {
+		DatabaseTable table = myDbSchema.getTable(tableName);
+        if(table != null) {
+            table.notifyTableUpdate();
+            myAppContext.getContentResolver().notifyChange(
+                    table.getUri(), null, false);
+        }
 	}
 
 	/**
@@ -345,90 +380,6 @@ public class AndroidDBConnection implements IDBConnector {
 	}
 
 	/**
-	 * This method creates the content values from an EntrySet
-	 * 
-	 * The key of the set should be the column name with the value being the
-	 * value for that row
-	 * 
-	 * @param row
-	 * @return
-	 */
-	private ContentValues getContentValues(Set<Entry<String, Object>> row)
-			throws DatabaseException {
-		ContentValues cv = new ContentValues();
-		for (Entry<String, Object> entrySet : row) {
-			Object value = entrySet.getValue();
-            addToContentValues(cv, entrySet.getKey(), value);
-        }
-
-		return cv;
-	}
-
-    private void addToContentValues(ContentValues cv, String columnName, Object value) throws DatabaseException {
-        if(value == null) {
-            cv.putNull(columnName);
-        } else if (value instanceof Integer) {
-			cv.put(columnName, (Integer) value);
-		} else if (value instanceof Boolean) {
-			cv.put(columnName, (Boolean) value);
-		} else if (value instanceof Double) {
-			cv.put(columnName, (Double) value);
-		} else if (value instanceof Float) {
-			cv.put(columnName, (Float) value);
-		} else if (value instanceof Long) {
-			cv.put(columnName, (Long) value);
-		} else if (value instanceof String) {
-			cv.put(columnName, (String) value);
-		} else if (value instanceof Date) {
-			long timeInMillis = ((Date) value).getTime();
-			cv.put(columnName, timeInMillis);
-		} else if (value instanceof Calendar) {
-			long timeInMillis = ((Calendar) value).getTimeInMillis();
-			cv.put(columnName, timeInMillis);
-		} else if(value instanceof byte[]) {
-			cv.put(columnName, (byte[]) value);
-		} else if(value instanceof Bitmap) {
-			Bitmap bmp = (Bitmap)value;
-			ByteArrayOutputStream stream = new ByteArrayOutputStream();
-			bmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
-			byte[] byteArray = stream.toByteArray();
-
-			cv.put(columnName, byteArray);
-		}  else if(value instanceof Uri) {
-			cv.put(columnName, value.toString());
-		} else {
-			throw new DatabaseException("Datatype "
-					+ value.getClass().getName() + " is not a valid "
-					+ "datatype");
-		}
-    }
-
-    private ContentValues getContentValues(Object row) throws DatabaseException{
-        ContentValues cv = new ContentValues();
-        try {
-            Field[] fields = row.getClass().getDeclaredFields();
-            for(Field field : fields) {
-                Annotation annotation = field.getAnnotation(DbColumnName.class);
-                if(annotation instanceof DbColumnName) {
-                    field.setAccessible(true);
-                    DbColumnName colNameAnnotation = (DbColumnName) annotation;
-                    String column = colNameAnnotation.value();
-                    Object value = field.get(row);
-					if(value != null) {
-						addToContentValues(cv, column, value);
-					}
-                }
-            }
-        } catch (IllegalAccessException e) {
-            throw new DatabaseException("The field that are to annotated to with the database " +
-                    "column name so that their value can be inserted into the database must " +
-                    "be accessible", e);
-        }
-
-        return cv;
-    }
-
-	/**
 	 * This method converts a nameValuePair array into a string array.
 	 * 
 	 * @param args
@@ -453,7 +404,7 @@ public class AndroidDBConnection implements IDBConnector {
 	 * @param query
 	 * @return
 	 */
-	private String getSQLJoinQuery(Query query) {
+	private String getSQLJoinQuery(Query query) throws DatabaseException {
 		StringBuilder statementBuilder = new StringBuilder();
 		
 		statementBuilder.append(DBConstants.SELECT);
@@ -467,9 +418,8 @@ public class AndroidDBConnection implements IDBConnector {
 				if(colBuilder.length() > 0){
 					colBuilder.append(",");
 				}
-				colBuilder.append(column);
+				colBuilder.append(getColumnClause(column));
 			}
-			statementBuilder.append(" ").append(colBuilder);
 		}
 		
 		if(query.isdistinct()){
@@ -566,13 +516,25 @@ public class AndroidDBConnection implements IDBConnector {
 
 		String mainTable = getColumnClause(query.getTable(), null);
 		if(!query.getJoins().isEmpty()) {
-            columnClause.append(", ");
 			for(Join join : query.getJoins()){
+				columnClause.append(", ");
 				columnClause.append(getColumnClause(join.getTable(), null));
 			}
 		}
 		return mainTable + " " + columnClause.toString();
     }
+
+	public String getColumnClause(String delimitedTableColumnName) throws DatabaseException {
+		String[] tableColumnPair = delimitedTableColumnName.split("\\.");
+        int count = tableColumnPair.length;
+		try {
+			return delimitedTableColumnName + " AS " +
+					DatabaseUtils.getDatabaseAsName(tableColumnPair[0], tableColumnPair[1]);
+		} catch (ArrayIndexOutOfBoundsException e) {
+			throw new DatabaseException("Column names must be delimited with the table name in " +
+					"a joined query");
+		}
+	}
 
     /**
      * This method returns the column clause in the format of "table.columnName AS table.columnName

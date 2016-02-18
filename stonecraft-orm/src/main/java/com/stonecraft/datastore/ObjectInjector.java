@@ -27,11 +27,11 @@ import java.util.Map;
  * @date Date: 16/03/2012 01:50:39
  * @version Revision: 1.0
  */
-public abstract class ObjectInjector {
+abstract class ObjectInjector {
 
     private Query myQuery;
     private Map<Class, Field[]> myClassFields;
-    private Map<Field, Annotation> myAnnotations;
+    protected Map<Field, Annotation> myAnnotations;
     private Map<Field, Class> myListTypeClass;
 
     public ObjectInjector(Query query) {
@@ -89,8 +89,8 @@ public abstract class ObjectInjector {
      */
     protected Field[] getFields(Class klass) {
         Field[] fields = null;
-        if(myClassFields.containsKey(klass.getName())) {
-            fields = myClassFields.get(klass.getName());
+        if(myClassFields.containsKey(klass)) {
+            fields = myClassFields.get(klass);
         } else {
             fields = klass.getDeclaredFields();
             myClassFields.put(klass, fields);

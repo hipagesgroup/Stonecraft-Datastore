@@ -141,8 +141,9 @@ public class JoinObjectInjector extends ObjectInjector{
 
                     } else if (annotation instanceof DbTableName) {
                         field.setAccessible(true);
-                        field.set(injectObject.rowData, injectObject(data, field.getType(),
-                                ((DbTableName) annotation).value(), null));
+                        InjectedValue subsetObject = injectObject(data, field.getType(),
+                                ((DbTableName) annotation).value(), null);
+                        field.set(injectObject.rowData, subsetObject.rowData);
 
                     } else if (annotation instanceof DbColumnName) {
                         DbColumnName injectAnnotation = (DbColumnName) annotation;
@@ -165,11 +166,20 @@ public class JoinObjectInjector extends ObjectInjector{
             trackObjectByClass(classOfT, injectObject, foreignKeyValues);
 
             return injectObject;
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
-                NoSuchMethodException e) {
+        } catch (InstantiationException e) {
+            throw new DatabaseException("Failed to create an instance of the class to be injected " +
+                    "with the data for this query", e);
+        } catch (IllegalAccessException e) {
+            throw new DatabaseException("Failed to create an instance of the class to be injected " +
+                    "with the data for this query", e);
+        } catch (InvocationTargetException e) {
+            throw new DatabaseException("Failed to create an instance of the class to be injected " +
+                    "with the data for this query", e);
+        } catch (NoSuchMethodException e) {
             throw new DatabaseException("Failed to create an instance of the class to be injected " +
                     "with the data for this query", e);
         }
+
 
     }
 

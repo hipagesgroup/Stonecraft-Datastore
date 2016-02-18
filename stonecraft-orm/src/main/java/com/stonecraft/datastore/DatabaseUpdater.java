@@ -255,7 +255,7 @@ public class DatabaseUpdater {
 		Map<String, DatabaseTable> obsoleteTables = new HashMap<String, DatabaseTable>();
 		Map<String, DatabaseTable> newSchemaTables = newSchema.getTables(); 
 		for(DatabaseTable table : currentSchema.getTables().values()){
-			if(!isSystemTable(table)){
+			if(!DatabaseUtils.isSystemTable(table.getName())){
 				if(newSchemaTables.containsKey(table.getName())){
 					compareTableColumns(table, newSchemaTables.get(table.getName()));
 				}
@@ -275,17 +275,6 @@ public class DatabaseUpdater {
 				}
 			}
 		}
-	}
-
-	/**
-	 * This method checks if the passed in table is a system table
-	 *
-	 * @param table
-	 * @return
-	 */
-	private boolean isSystemTable(DatabaseTable table) {
-		return table.getName().equals(DBConstants.TABLE_MAP) ||
-			table.getName().equals(DBConstants.TABLE_SCHEMA_SETTINGS);
 	}
 
 	/**

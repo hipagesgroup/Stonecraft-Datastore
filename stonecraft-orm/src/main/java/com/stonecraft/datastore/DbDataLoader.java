@@ -9,6 +9,8 @@ import android.text.TextUtils;
 import com.stonecraft.datastore.exceptions.DatabaseException;
 import com.stonecraft.datastore.interaction.Query;
 
+import java.util.Calendar;
+
 /**
  * Created by michaeldelaney on 18/11/15.
  */
@@ -20,7 +22,7 @@ public class DbDataLoader<T> extends AsyncTaskLoader<T> {
     private final String myDbName;
     private final Query myQuery;
     private final Class myLoaderResultType;
-
+    private Calendar myTableUpdateTime;
 
     public DbDataLoader(Context context, String dbName, Query query, Class loaderResultType) {
         super(context);
@@ -75,7 +77,6 @@ public class DbDataLoader<T> extends AsyncTaskLoader<T> {
             return;
         }
         myResult = result;
-
         if (isStarted()) {
             super.deliverResult(result);
         }
@@ -90,11 +91,17 @@ public class DbDataLoader<T> extends AsyncTaskLoader<T> {
                     myQuery.getTable()), false, myObserver);
         }
 
+        Calendar tableUpdateTime = ds.getLastTableUpdateTime(myQuery.getTable());
+        if (takeContentChanged() || myResult == null || tableUpdateTime != myTableUpdateTime ||
+                (myResult !=null && tableUpdateTime != null &&
+                        tableUpdateTime.compareTo(myTableUpdateTime) > 0)) {
+            myTableUpdateTime = tableUpdateTime;
+            forceLoad();
+            return;
+        }
+
         if (myResult != null) {
             deliverResult(myResult);
-        }
-        if (takeContentChanged() || myResult == null) {
-            forceLoad();
         }
     }
 
@@ -107,6 +114,8 @@ public class DbDataLoader<T> extends AsyncTaskLoader<T> {
         cancelLoad();
         getContext().getContentResolver().unregisterContentObserver(myObserver);
     }
+
+
 
     @Override
     protected void onReset() {

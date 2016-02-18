@@ -2,13 +2,14 @@ package com.stonecraft.datastore.view;
 
 import android.net.Uri;
 
+import com.stonecraft.datastore.exceptions.DatabaseException;
+import com.stonecraft.datastore.utils.StringUtils;
+
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.stonecraft.datastore.exceptions.DatabaseException;
-import com.stonecraft.datastore.utils.StringUtils;
 
 /**
  * This class is the base class for a abstract view of a database table. The sub
@@ -29,6 +30,7 @@ public abstract class DatabaseTable {
 	protected String myName;
 	protected Map<String, DatabaseColumn> myColumns;
 	protected boolean myIsTempTable;
+	protected Calendar myLastTableUpdate;
 
 	public DatabaseTable(String name, Uri uri) {
 		myName = name;
@@ -54,6 +56,15 @@ public abstract class DatabaseTable {
 		
 		builder.append(myName);
 		return builder.toString();
+	}
+
+	/**
+	 * This method returns the column in this table with the given name
+	 * @param name
+	 * @return
+	 */
+	public DatabaseColumn getColumn(String name) {
+		return myColumns.get(name);
 	}
 
 	public Uri getUri() {
@@ -92,6 +103,14 @@ public abstract class DatabaseTable {
 		}
 		
 		return StringUtils.convertListToDelimitedString(columns, StringUtils.COMMA);
+	}
+
+	public Calendar getLastTableUpdate() {
+		return myLastTableUpdate;
+	}
+
+	public void notifyTableUpdate() {
+		myLastTableUpdate = Calendar.getInstance();
 	}
 
 	/**

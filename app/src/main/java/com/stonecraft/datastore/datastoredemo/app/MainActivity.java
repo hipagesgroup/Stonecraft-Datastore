@@ -22,10 +22,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.stonecraft.database.datastoredemo.app.R;
+import com.stonecraft.datastore.AggregateQuery;
 import com.stonecraft.datastore.Datastore;
 import com.stonecraft.datastore.DatastoreTransaction;
 import com.stonecraft.datastore.DbDataLoader;
-import com.stonecraft.datastore.OnAggregateQueryComplete;
 import com.stonecraft.datastore.OnQueryComplete;
 import com.stonecraft.datastore.RSData;
 import com.stonecraft.datastore.RowCountQuery;
@@ -41,6 +41,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,7 +75,7 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-//        getSupportLoaderManager().initLoader(0, null, this);
+        getSupportLoaderManager().initLoader(0, null, this);
         populateTables();
         myTxbStatus = (TextView)findViewById(R.id.txbStatus);
 
@@ -158,8 +159,8 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        Uri uri = Datastore.getDataStore(DB_NAME).getTableUri("SHORT_LIST");
-        getContentResolver().registerContentObserver(uri, true, myContentObserver);
+//        Uri uri = Datastore.getDataStore(DB_NAME).getTableUri("SHORT_LIST");
+//        getContentResolver().registerContentObserver(uri, true, myContentObserver);
     }
 
     /* (non-Javadoc)
@@ -253,47 +254,26 @@ public class MainActivity extends AppCompatActivity
 
     private void query() {
         Datastore ds = Datastore.getDataStore(DB_NAME);
-        RowCountQuery countQuery = new RowCountQuery("SHORT_LIST");
 
-        try{
+        Log.d("PERFORMANCETEST",
+                "Query performance test start");
+        final long start = Calendar.getInstance().getTimeInMillis();
+        Query query = new Query("SHORT_LIST");
+        ds.executeQuery(0, query, new OnQueryComplete<Shortlist>() {
 
-            final long count = (long)ds.executeAggregateQuery(countQuery);
-            myTxbStatus.setText("Datamap record count " + count);
-            ds.executeAggregateQuery(0, countQuery, new OnAggregateQueryComplete() {
-                @Override
-                public void onQueryFailed(int token, DatabaseException e) {
+            @Override
+            public void onQueryComplete(int token, Shortlist[] resultSet) {
+                Log.d("PERFORMANCETEST",
+                        "Query of " + resultSet.length + " records took " +
+                                (Calendar.getInstance().getTimeInMillis() - start));
+            }
 
-                }
-
-                @Override
-                public void onQueryComplete(int token, Object result) {
-                    Log.d("TEST",
-                            "Threaded aggregate query result = " + result);
-                }
-            });
-
-            Query query = new Query("SHORT_LIST");
-            ds.executeQuery(0, query, new OnQueryComplete<Shortlist>() {
-
-                @Override
-                public void onQueryComplete(int token, Shortlist[] resultSet) {
-                    Log.d("TEST",
-                            "Query count = " + count + " inject data count = " + resultSet.length);
-                    for (Shortlist shortlist : resultSet) {
-                        Log.d("TEST", "Test default = " + shortlist.getPostcode());
-                    }
-                }
-
-                @Override
-                public void onQueryFailed(int token, DatabaseException e) {
-
-                }
-            });
-        }
-        catch(DatabaseException e){
-            myTxbStatus.setText("Query failed");
-            Log.e("MainActivity", "Query failed [" + e + "]");
-        }
+            @Override
+            public void onQueryFailed(int token, DatabaseException e) {
+                Log.d("PERFORMANCETEST",
+                        "Query performance test failed [" + e + "]");
+            }
+        });
     }
 
     private void displayPhoto() {
@@ -422,85 +402,120 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void populateTables() {
-        DatastoreTransaction dt = new DatastoreTransaction();
-        Shortlist shortList = new Shortlist();
-        shortList.setPropertyID(0);
-        shortList.setIsFavourite(true);
-        shortList.setPostcode(2000);
-        dt.addStatement(new Insert<Shortlist>("SHORT_LIST", shortList));
-        shortList = new Shortlist();
-        shortList.setPropertyID(1);
-        shortList.setIsFavourite(true);
-        shortList.setPostcode(2001);
-        dt.addStatement(new Insert<Shortlist>("SHORT_LIST", shortList));
-        shortList = new Shortlist();
-        shortList.setPropertyID(2);
-        shortList.setIsFavourite(true);
-        shortList.setPostcode(2002);
-        dt.addStatement(new Insert<Shortlist>("SHORT_LIST", shortList));
-        shortList = new Shortlist();
-        shortList.setPropertyID(3);
-        shortList.setIsFavourite(true);
-        shortList.setPostcode(2003);
-        dt.addStatement(new Insert<Shortlist>("SHORT_LIST", shortList));
-        shortList = new Shortlist();
-        shortList.setPropertyID(4);
-        shortList.setIsFavourite(true);
-        shortList.setPostcode(2004);
-        dt.addStatement(new Insert<Shortlist>("SHORT_LIST", shortList));
+        AggregateQuery query = new RowCountQuery("SHORT_LIST");
+        long count = 0;
+        try {
+            count = (long) Datastore.getDataStore(DB_NAME).executeAggregateQuery(query);
 
-        ShortlistJoin shortlistJoin = new ShortlistJoin();
-        shortlistJoin.setShortListId(0);
-        shortlistJoin.setShortListPropertyID(0);
-        shortlistJoin.setShortListPostcode(2000);
-        dt.addStatement(new Insert<ShortlistJoin>("SHORT_LIST_JOIN", shortlistJoin));
-        shortlistJoin = new ShortlistJoin();
-        shortlistJoin.setShortListId(1);
-        shortlistJoin.setShortListPropertyID(0);
-        shortlistJoin.setShortListPostcode(2000);
-        dt.addStatement(new Insert<ShortlistJoin>("SHORT_LIST_JOIN", shortlistJoin));
-        shortlistJoin = new ShortlistJoin();
-        shortlistJoin.setShortListId(2);
-        shortlistJoin.setShortListPropertyID(0);
-        shortlistJoin.setShortListPostcode(2000);
-        dt.addStatement(new Insert<ShortlistJoin>("SHORT_LIST_JOIN", shortlistJoin));
-        shortlistJoin = new ShortlistJoin();
-        shortlistJoin.setShortListId(3);
-        shortlistJoin.setShortListPropertyID(1);
-        shortlistJoin.setShortListPostcode(2000);
-        dt.addStatement(new Insert<ShortlistJoin>("SHORT_LIST_JOIN", shortlistJoin));
-        shortlistJoin = new ShortlistJoin();
-        shortlistJoin.setShortListId(4);
-        shortlistJoin.setShortListPropertyID(2);
-        shortlistJoin.setShortListPostcode(2000);
-        dt.addStatement(new Insert<ShortlistJoin>("SHORT_LIST_JOIN", shortlistJoin));
-        shortlistJoin = new ShortlistJoin();
-        shortlistJoin.setShortListId(5);
-        shortlistJoin.setShortListPropertyID(2);
-        shortlistJoin.setShortListPostcode(2000);
-        dt.addStatement(new Insert<ShortlistJoin>("SHORT_LIST_JOIN", shortlistJoin));
-        shortlistJoin = new ShortlistJoin();
-        shortlistJoin.setShortListId(6);
-        shortlistJoin.setShortListPropertyID(2);
-        shortlistJoin.setShortListPostcode(2000);
-        dt.addStatement(new Insert<ShortlistJoin>("SHORT_LIST_JOIN", shortlistJoin));
-        shortlistJoin = new ShortlistJoin();
-        shortlistJoin.setShortListId(7);
-        shortlistJoin.setShortListPropertyID(3);
-        shortlistJoin.setShortListPostcode(2000);
-        dt.addStatement(new Insert<ShortlistJoin>("SHORT_LIST_JOIN", shortlistJoin));
+            if(count == 0) {
+                DatastoreTransaction dt = new DatastoreTransaction();
+                Shortlist shortList = new Shortlist();
+                shortList.setPropertyID(0);
+                shortList.setIsFavourite(true);
+                shortList.setPostcode(2000);
+                dt.addStatement(new Insert<Shortlist>("SHORT_LIST", shortList));
+                shortList = new Shortlist();
+                shortList.setPropertyID(1);
+                shortList.setIsFavourite(true);
+                shortList.setPostcode(2001);
+                dt.addStatement(new Insert<Shortlist>("SHORT_LIST", shortList));
+                shortList = new Shortlist();
+                shortList.setPropertyID(2);
+                shortList.setIsFavourite(true);
+                shortList.setPostcode(2002);
+                dt.addStatement(new Insert<Shortlist>("SHORT_LIST", shortList));
+                shortList = new Shortlist();
+                shortList.setPropertyID(3);
+                shortList.setIsFavourite(true);
+                shortList.setPostcode(2003);
+                dt.addStatement(new Insert<Shortlist>("SHORT_LIST", shortList));
+                shortList = new Shortlist();
+                shortList.setPropertyID(4);
+                shortList.setIsFavourite(true);
+                shortList.setPostcode(2004);
+                dt.addStatement(new Insert<Shortlist>("SHORT_LIST", shortList));
 
-        dt.execute(Datastore.getDataStore(DB_NAME), new OnNonQueryComplete() {
-            @Override
-            public void onNonQueryComplete(int token, int updated) {
+                ShortlistJoin shortlistJoin = new ShortlistJoin();
+                shortlistJoin.setShortListId(0);
+                shortlistJoin.setShortListPropertyID(0);
+                shortlistJoin.setShortListPostcode(2000);
+                dt.addStatement(new Insert<ShortlistJoin>("SHORT_LIST_JOIN", shortlistJoin));
+                shortlistJoin = new ShortlistJoin();
+                shortlistJoin.setShortListId(1);
+                shortlistJoin.setShortListPropertyID(0);
+                shortlistJoin.setShortListPostcode(2000);
+                dt.addStatement(new Insert<ShortlistJoin>("SHORT_LIST_JOIN", shortlistJoin));
+                shortlistJoin = new ShortlistJoin();
+                shortlistJoin.setShortListId(2);
+                shortlistJoin.setShortListPropertyID(0);
+                shortlistJoin.setShortListPostcode(2000);
+                dt.addStatement(new Insert<ShortlistJoin>("SHORT_LIST_JOIN", shortlistJoin));
+                shortlistJoin = new ShortlistJoin();
+                shortlistJoin.setShortListId(3);
+                shortlistJoin.setShortListPropertyID(1);
+                shortlistJoin.setShortListPostcode(2000);
+                dt.addStatement(new Insert<ShortlistJoin>("SHORT_LIST_JOIN", shortlistJoin));
+                shortlistJoin = new ShortlistJoin();
+                shortlistJoin.setShortListId(4);
+                shortlistJoin.setShortListPropertyID(2);
+                shortlistJoin.setShortListPostcode(2000);
+                dt.addStatement(new Insert<ShortlistJoin>("SHORT_LIST_JOIN", shortlistJoin));
+                shortlistJoin = new ShortlistJoin();
+                shortlistJoin.setShortListId(5);
+                shortlistJoin.setShortListPropertyID(2);
+                shortlistJoin.setShortListPostcode(2000);
+                dt.addStatement(new Insert<ShortlistJoin>("SHORT_LIST_JOIN", shortlistJoin));
+                shortlistJoin = new ShortlistJoin();
+                shortlistJoin.setShortListId(6);
+                shortlistJoin.setShortListPropertyID(2);
+                shortlistJoin.setShortListPostcode(2000);
+                dt.addStatement(new Insert<ShortlistJoin>("SHORT_LIST_JOIN", shortlistJoin));
+                shortlistJoin = new ShortlistJoin();
+                shortlistJoin.setShortListId(7);
+                shortlistJoin.setShortListPropertyID(3);
+                shortlistJoin.setShortListPostcode(2000);
+                dt.addStatement(new Insert<ShortlistJoin>("SHORT_LIST_JOIN", shortlistJoin));
 
+                dt.execute(Datastore.getDataStore(DB_NAME), new OnNonQueryComplete() {
+                    @Override
+                    public void onNonQueryComplete(int token, int updated) {
+
+                    }
+
+                    @Override
+                    public void onNonQueryFailed(int token, DatabaseException e) {
+
+                    }
+                });
+
+                dt = new DatastoreTransaction();
+                Map<String,Object> values;
+                for(int i = 0; i < 10000; i++) {
+                    shortList = new Shortlist();
+                    shortList.setIsFavourite(true);
+                    shortList.setPostcode(2000);
+                    dt.addStatement(new Insert<Shortlist>("SHORT_LIST", shortList));
+                }
+
+                Log.d("PERFORMANCETEST", "Start populating tables");
+                final long start = Calendar.getInstance().getTimeInMillis();
+                dt.execute(Datastore.getDataStore(DB_NAME), new OnNonQueryComplete() {
+                    @Override
+                    public void onNonQueryComplete(int token, int updated) {
+                        Log.d("PERFORMANCETEST", "Insert 10,000 records time taken = " +
+                                (Calendar.getInstance().getTimeInMillis() - start));
+                    }
+
+                    @Override
+                    public void onNonQueryFailed(int token, DatabaseException e) {
+                        Log.d("PERFORMANCETEST", "Failed populate table test");
+                    }
+                });
             }
+        } catch (DatabaseException e) {
+            e.printStackTrace();
+        }
 
-            @Override
-            public void onNonQueryFailed(int token, DatabaseException e) {
-
-            }
-        });
     }
 
     private void insert() {

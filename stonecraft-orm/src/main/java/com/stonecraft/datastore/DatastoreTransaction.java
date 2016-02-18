@@ -11,7 +11,9 @@ import com.stonecraft.datastore.interfaces.IDBConnector;
 import com.stonecraft.datastore.interfaces.OnNonQueryComplete;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -72,9 +74,12 @@ public class DatastoreTransaction {
 
     int run() throws DatabaseException {
         try {
+            Map<String, String> updatedTableUris = new HashMap<>();
             int result = 0;
             myConnection.startTransaction();
             for(Statement stmt : myStatementList) {
+                updatedTableUris.put(stmt.getTable(), stmt.getTable());
+
                 if(stmt instanceof Insert) {
                     myConnection.insert((Insert) stmt);
                     result += 1;
@@ -94,6 +99,11 @@ public class DatastoreTransaction {
             }
 
             myConnection.commit();
+
+            for(String tableName : updatedTableUris.keySet()) {
+                myConnection.sendTableUpdateNotification(tableName);
+            }
+
             return result;
         }
         catch (DatabaseException e) {

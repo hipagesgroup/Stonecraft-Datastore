@@ -58,6 +58,17 @@ public class DatabaseUtils {
 		return DBConstants.DATATYPE_INT_UNKNOWN;
 	}
 
+	/**
+	 * This method checks if the passed in table is a system table
+	 *
+	 * @param tableName
+	 * @return
+	 */
+	public static boolean isSystemTable(String tableName) {
+		return tableName.equals(DBConstants.TABLE_MAP) ||
+				tableName.equals(DBConstants.TABLE_SCHEMA_SETTINGS);
+	}
+
     /**
      * This method returns the tablename and column name in a format that should be used in
      * a statements AS clause.

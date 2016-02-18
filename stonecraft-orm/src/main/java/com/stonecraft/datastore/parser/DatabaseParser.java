@@ -112,6 +112,7 @@ public class DatabaseParser extends AsyncTask<InputStream, Void, DbSchemaModel>{
 
 	private DefaultHandler myHandler = new DefaultHandler() {
 		private String myCurrentElement;
+		private StringBuilder myTagTextBuilder;
 		private String myCurrentBlock;
 
 		private Map<String, String> myTableValues;
@@ -122,28 +123,32 @@ public class DatabaseParser extends AsyncTask<InputStream, Void, DbSchemaModel>{
 		public void startElement(String uri, String localName, String qName,
 				Attributes attributes) throws SAXException {
 			myCurrentElement = qName;
-			if (myCurrentElement.equals(SCHEMA)) {
+			myTagTextBuilder = new StringBuilder();
+			if (myCurrentElement.equalsIgnoreCase(SCHEMA)) {
 				myCurrentBlock = qName;
-			} else if (myCurrentElement.equals(TABLE)) {
+			} else if (myCurrentElement.equalsIgnoreCase(TABLE)) {
 				myCurrentBlock = qName;
-			} else if (myCurrentElement.equals(COLUMN)) {
+			} else if (myCurrentElement.equalsIgnoreCase(COLUMN)) {
 				myCurrentBlock = qName;
 			}
 
-			if (myCurrentBlock.equals(TABLE)) {
+            //Starts a new table block
+			if (myCurrentBlock.equalsIgnoreCase(TABLE)) {
 				if (myTableValues == null || myCols == null) {
 					myTableValues = new HashMap<String, String>();
 					myCols = new ArrayList<DatabaseColumn>();
 				}
-				if(TABLE.equals(qName)) {
+				if(TABLE.equalsIgnoreCase(qName)) {
 					myTableValues.put(URI, attributes.getValue(URI));
 				}
-			} else if (myCurrentBlock.equals(COLUMN)) {
+
+            //Starts a new column block
+			} else if (myCurrentBlock.equalsIgnoreCase(COLUMN)) {
 				if (myColumnValues == null) {
 					myColumnValues = new HashMap<String, String>();
 				}
 
-				if (myCurrentElement.equals(TYPE)) {
+				if (myCurrentElement.equalsIgnoreCase(TYPE)) {
 					myColumnValues.put(LENGTH, attributes.getValue(LENGTH));
 				}
 			}
@@ -151,9 +156,29 @@ public class DatabaseParser extends AsyncTask<InputStream, Void, DbSchemaModel>{
 
 		public void endElement(String uri, String localName, String qName)
 				throws SAXException {
+            String tagTextValue = myTagTextBuilder.toString().replace("(\\r|\\n|\\t)", "");
+            if(tagTextValue.equals("CONTACTS")){
+                String breakHere = "";
+            }
+			if (myCurrentBlock.equalsIgnoreCase(SCHEMA)) {
+				if (myCurrentElement.equalsIgnoreCase(NAME)) {
+					mySchema.setName(tagTextValue);
+				} else if (myCurrentElement.equalsIgnoreCase(VERSION)) {
+					mySchema.setVersion(Integer.parseInt(tagTextValue));
+				}
+
+			} else if (myCurrentBlock.equalsIgnoreCase(TABLE)
+					&& !myCurrentBlock.equalsIgnoreCase(myCurrentElement)) {
+				myTableValues.put(myCurrentElement, tagTextValue);
+			} else if (myCurrentBlock.equalsIgnoreCase(COLUMN)
+					&& !myCurrentBlock.equalsIgnoreCase(myCurrentElement)
+					&& !TextUtils.isEmpty(myCurrentElement)) {
+				myColumnValues.put(myCurrentElement, tagTextValue);
+			}
+
 			myCurrentElement = StringUtils.EmptyString;
 
-			if (qName.equals(TABLE)) {
+			if (qName.equalsIgnoreCase(TABLE)) {
 				if(TextUtils.isEmpty(myTableValues.get(URI))) {
 					throw new SchemaParseException("There was no uri attribute in " +
 							"the table element " + myTableValues.get(NAME));
@@ -163,7 +188,7 @@ public class DatabaseParser extends AsyncTask<InputStream, Void, DbSchemaModel>{
 				myTableValues = new HashMap<String, String>();
 				myCols = new ArrayList<DatabaseColumn>();
 
-			} else if (qName.equals(COLUMN)) {
+			} else if (qName.equalsIgnoreCase(COLUMN)) {
 				myCols.add(buildCol());
 				myColumnValues = new HashMap<String, String>();
 			}
@@ -171,24 +196,9 @@ public class DatabaseParser extends AsyncTask<InputStream, Void, DbSchemaModel>{
 
 		public void characters(char ch[], int start, int length)
 				throws SAXException {
-			String value = new String(ch).substring(start, start + length);
 
 			if(!TextUtils.isEmpty(myCurrentElement)) {
-				if (myCurrentBlock.equals(SCHEMA)) {
-					if (myCurrentElement.equals(NAME)) {
-						mySchema.setName(value);
-					} else if (myCurrentElement.equals(VERSION)) {
-						mySchema.setVersion(Integer.parseInt(value));
-					}
-
-				} else if (myCurrentBlock.equals(TABLE)
-						&& !myCurrentBlock.equals(myCurrentElement)) {
-					myTableValues.put(myCurrentElement, value);
-				} else if (myCurrentBlock.equals(COLUMN)
-						&& !myCurrentBlock.equals(myCurrentElement)
-						&& !TextUtils.isEmpty(myCurrentElement)) {
-					myColumnValues.put(myCurrentElement, value);
-				}
+				myTagTextBuilder.append(new String(ch, start, start + length));
 			}
 		}
 

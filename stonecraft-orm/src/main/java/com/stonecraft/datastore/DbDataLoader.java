@@ -16,7 +16,7 @@ import java.util.Calendar;
  */
 public class DbDataLoader<T> extends AsyncTaskLoader<T> {
 
-    private CancellationSignal myCancellationSignal;
+    private volatile CancellationSignal myCancellationSignal;
     private final ForceLoadContentObserver myObserver;
     private T myResult;
     private final String myDbName;
@@ -115,8 +115,6 @@ public class DbDataLoader<T> extends AsyncTaskLoader<T> {
         getContext().getContentResolver().unregisterContentObserver(myObserver);
     }
 
-
-
     @Override
     protected void onReset() {
         super.onReset();
@@ -124,6 +122,4 @@ public class DbDataLoader<T> extends AsyncTaskLoader<T> {
         // Ensure the loader is stopped
         onStopLoading();
     }
-
-
 }

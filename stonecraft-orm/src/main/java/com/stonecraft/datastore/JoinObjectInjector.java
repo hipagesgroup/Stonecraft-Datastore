@@ -124,20 +124,22 @@ public class JoinObjectInjector extends ObjectInjector{
                     if (!subsetsInjected && annotation instanceof DbJoin) {
                         DbJoin dbJoinAnnotation = (DbJoin)getAnnotation(field);
                         field.setAccessible(true);
-                        List list = new ArrayList();
                         Class listType = getTypeOfList(field);
                         InjectedValue<T> subsetObject = injectObject(data, listType,
                                 dbJoinAnnotation.table(), dbJoinAnnotation.foreignKey());
-                        foreignKeyValues.add(subsetObject.foreignKeyValue);
-                        list.add(subsetObject.rowData);
-                        field.set(injectObject.rowData, list);
+                        if(subsetObject.foreignKeyValue != null) {
+                            foreignKeyValues.add(subsetObject.foreignKeyValue);
+                            List list = new ArrayList();
+                            list.add(subsetObject.rowData);
+                            field.set(injectObject.rowData, list);
 
-                        List<Field> subsetFields = mySubsetFields.get(classOfT);
-                        if(subsetFields == null) {
-                            subsetFields = new ArrayList<>();
-                            mySubsetFields.put(classOfT, subsetFields);
+                            List<Field> subsetFields = mySubsetFields.get(classOfT);
+                            if(subsetFields == null) {
+                                subsetFields = new ArrayList<>();
+                                mySubsetFields.put(classOfT, subsetFields);
+                            }
+                            subsetFields.add(field);
                         }
-                        subsetFields.add(field);
 
                     } else if (annotation instanceof DbTableName) {
                         field.setAccessible(true);
@@ -168,16 +170,16 @@ public class JoinObjectInjector extends ObjectInjector{
             return injectObject;
         } catch (InstantiationException e) {
             throw new DatabaseException("Failed to create an instance of the class to be injected " +
-                    "with the data for this query", e);
+                    "with the data for this query for class type \" + classOfT.getName()", e);
         } catch (IllegalAccessException e) {
             throw new DatabaseException("Failed to create an instance of the class to be injected " +
-                    "with the data for this query", e);
+                    "with the data for this query for class type \" + classOfT.getName()", e);
         } catch (InvocationTargetException e) {
             throw new DatabaseException("Failed to create an instance of the class to be injected " +
-                    "with the data for this query", e);
+                    "with the data for this query for class type \" + classOfT.getName()", e);
         } catch (NoSuchMethodException e) {
             throw new DatabaseException("Failed to create an instance of the class to be injected " +
-                    "with the data for this query", e);
+                    "with the data for this query for class type " + classOfT.getName(), e);
         }
 
 
@@ -274,6 +276,9 @@ public class JoinObjectInjector extends ObjectInjector{
      * @return
      */
     private String getForeignKey(List<String> foreignKeyValues) {
+        if(foreignKeyValues == null) {
+            String stopHere = "";
+        }
         Collections.sort(foreignKeyValues);
         StringBuilder keyBuilder = new StringBuilder();
         for(String foreignKeyValue : foreignKeyValues) {

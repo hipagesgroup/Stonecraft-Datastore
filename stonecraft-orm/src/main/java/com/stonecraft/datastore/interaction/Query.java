@@ -21,7 +21,7 @@ public class Query {
 	private String myGroupBy;
 	private String myHaving;
 	private String myOrderBy;
-	private String myLimit;
+	private int myLimit;
 	private String myTable;
 	private List<Join> myJoins;
 
@@ -115,7 +115,7 @@ public class Query {
 	/**
 	 * @return the limit of this query
 	 */
-	public String getLimit() {
+	public int getLimit() {
 		return myLimit;
 	}
 
@@ -223,7 +223,7 @@ public class Query {
 	 * @param limit
 	 * @return
 	 */
-	public Query limit(String limit) {
+	public Query limit(int limit) {
 		myLimit = limit;
 		return this;
 	}

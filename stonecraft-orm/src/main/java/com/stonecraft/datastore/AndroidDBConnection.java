@@ -107,11 +107,13 @@ public class AndroidDBConnection implements IDBConnector {
 		try {
 			Cursor cursor = null;
 			if(query.getJoins().isEmpty()){
+				String limit = query.getLimit() > 0 ?
+						String.valueOf(query.getLimit()) : null;
 				cursor = myDBOpenHelper.getReadableDatabase().query(
 					query.isdistinct(), query.getTable(), query.getColumns(),
 					query.getWhereClause(),
 					getArguments(query.getSelectionArgs()), query.getGroupBy(),
-					query.getHaving(), query.getOrderBy(), query.getLimit());
+					query.getHaving(), query.getOrderBy(), limit);
 			} else {
 				String queryString = getSQLJoinQuery(query);
 				cursor = myDBOpenHelper.getReadableDatabase().rawQuery(queryString, null);
@@ -329,7 +331,7 @@ public class AndroidDBConnection implements IDBConnector {
 		}
 		else if(column.getType() == newSchemaColumn.getType() &&
 			column.isPrimarykey() == newSchemaColumn.isPrimarykey()) {
-			if(column.isNullable() == !newSchemaColumn.isNullable()) {
+			if(column.isNullable() && !newSchemaColumn.isNullable()) {
 				return CHANGE_EXCEPTION;
 			}
 			return CHANGE_ALLOWED;
@@ -442,7 +444,7 @@ public class AndroidDBConnection implements IDBConnector {
 		if(!StringUtils.isEmpty(query.getHaving())){
 			statementBuilder.append(" " + DBConstants.HAVING + " " + query.getHaving());
 		}
-		if(!StringUtils.isEmpty(query.getLimit())){
+		if(query.getLimit() > 0){
 			statementBuilder.append(" " + DBConstants.LIMIT + " " + query.getLimit());
 		}
 		

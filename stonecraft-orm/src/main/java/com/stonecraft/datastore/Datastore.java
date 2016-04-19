@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.stonecraft.datastore.exceptions.DatabaseException;
+import com.stonecraft.datastore.interaction.IRawStatement;
 import com.stonecraft.datastore.interaction.Insert;
 import com.stonecraft.datastore.interaction.Query;
 import com.stonecraft.datastore.interaction.Statement;
@@ -103,6 +104,14 @@ public class Datastore implements OnTaskCompleteListener {
         }
 
 		return null;
+	}
+
+	/**
+	 * This method returns the name of the database that is currently being used in this instance.
+	 * @return
+     */
+	public String getDatabaseName() {
+		return myActiveDatabase.getName();
 	}
 
 	public Calendar getLastTableUpdateTime(String tableName) {
@@ -457,31 +466,35 @@ public class Datastore implements OnTaskCompleteListener {
 	 */
 	public void executeAddOrUpdate(int token, final String whereClause, final Insert insert,
 		final OnNonQueryComplete listener) {
-		Query query = new Query(insert.getTable());
+		RowCountQuery query = new RowCountQuery(insert.getTable());
 		query.whereClause(whereClause);
-		executeQuery(token, query, new OnQueryComplete<RSData>() {
+		executeAggregateQuery(token, query, new OnAggregateQueryComplete() {
 
 			@Override
-			public void onQueryComplete(int token, RSData[] resultSets) {
-				RSData resultSet = resultSets[0];
-				resultSet.moveToFirst();
+			public void onQueryComplete(int token, Object result) {
+				long rowCount = (long)result;
 
 				//do an insert if no records are found or an update otherwise.
 				Statement updateOrAddStmt = null;
-				if (resultSet.getCount() <= 0) {
+				if (rowCount <= 0) {
 					updateOrAddStmt = insert;
 				} else {
-					Map<String, Object> values = insert.getValues();
-
-					if (!values.isEmpty()) {
+					if(insert.getInsertRowClasses() != null) {
 						Update update = new Update(insert.getTable(),
-								values, whereClause, null);
+								insert.getInsertRowClasses());
 						updateOrAddStmt = update;
+					} else {
+						Map<String, Object> values = insert.getValues();
 
+						if (!values.isEmpty()) {
+							Update update = new Update(insert.getTable(),
+									values, whereClause, null);
+							updateOrAddStmt = update;
+
+						}
 					}
+                    ((Update)updateOrAddStmt).whereClause(whereClause);
 				}
-
-				resultSet.close();
 
 				if (updateOrAddStmt != null) {
 					executeNonQuery(token, updateOrAddStmt, listener);
@@ -494,7 +507,9 @@ public class Datastore implements OnTaskCompleteListener {
 
 			@Override
 			public void onQueryFailed(int token, DatabaseException e) {
-				listener.onNonQueryFailed(token, e);
+				if(listener != null) {
+					listener.onNonQueryFailed(token, e);
+				}
 			}
 		});
 	}
@@ -562,6 +577,28 @@ public class Datastore implements OnTaskCompleteListener {
 			executeStmt(task);
 		} catch (DatabaseException e) {
 			listener.onNonQueryFailed(token, e);
+		}
+	}
+
+	public void executeRawStatement(int token, IRawStatement stmt) throws DatabaseException {
+		int taskId = new AtomicInteger().incrementAndGet();
+		DatastoreTransaction dt = new DatastoreTransaction();
+		dt.setConnection(myActiveDatabase);
+		dt.addStatement(stmt);
+		DatabaseNonQueryTask task = new DatabaseNonQueryTask(taskId,
+				DEFAULT_TOKEN, this, dt);
+		task.startTask();
+	}
+
+	public String getRawQuery(Query query) throws DatabaseException{
+		AndroidQueryCreator aqc = new AndroidQueryCreator(myActiveDatabase.getDatabaseSchema());
+
+		if(query.getJoins().isEmpty()) {
+			//TODO
+			throw new UnsupportedOperationException("This method does not support creating a " +
+					" raw query from a Query object that doesn't contain a join at this time");
+		} else {
+			return aqc.getSQLJoinQuery(query);
 		}
 	}
 

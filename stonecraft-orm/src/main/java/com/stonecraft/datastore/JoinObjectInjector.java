@@ -118,17 +118,17 @@ public class JoinObjectInjector extends ObjectInjector{
                 if(!myFieldMonitor.wasFieldInjectedPreviously(injectObject, field)) {
                     Annotation annotation = getAnnotation(field);
                     T rowData = injectObject.rowData;
-                    //TODO for DbJoin you need to check if the field was already injected via injectSubset above
+                    //TODO for DbTableGroup you need to check if the field was already injected via injectSubset above
                     //or if it still needs to be injected as this is the first time the passed in class is
                     // being injected.
-                    if (!subsetsInjected && annotation instanceof DbJoin) {
-                        DbJoin dbJoinAnnotation = (DbJoin)getAnnotation(field);
+                    if (!subsetsInjected && annotation instanceof DbTableGroup) {
+                        DbTableGroup dbTableGroupAnnotation = (DbTableGroup)getAnnotation(field);
                         field.setAccessible(true);
                         Class listType = getTypeOfList(field);
                         InjectedValue<T> subsetObject = injectObject(data, listType,
-                                dbJoinAnnotation.table(), dbJoinAnnotation.foreignKey());
-                        if(subsetObject.foreignKeyValue != null) {
-                            foreignKeyValues.add(subsetObject.foreignKeyValue);
+                                dbTableGroupAnnotation.table(), dbTableGroupAnnotation.groupBy());
+                        if(subsetObject.groupKeyValue != null) {
+                            foreignKeyValues.add(subsetObject.groupKeyValue);
                             List list = new ArrayList();
                             list.add(subsetObject.rowData);
                             field.set(injectObject.rowData, list);
@@ -155,7 +155,7 @@ public class JoinObjectInjector extends ObjectInjector{
                                 foreignKey)) {
                             Object fieldValue = field.get(injectObject.rowData);
                             if(fieldValue != null){
-                                injectObject.foreignKeyValue = fieldValue.toString();
+                                injectObject.groupKeyValue = fieldValue.toString();
                             }
 
                         }
@@ -228,13 +228,13 @@ public class JoinObjectInjector extends ObjectInjector{
             return null;
         }
         for(Field field : subsetFields) {
-            DbJoin dbJoinAnnotation = (DbJoin)getAnnotation(field);
+            DbTableGroup dbTableGroupAnnotation = (DbTableGroup)getAnnotation(field);
             Class innerClassType = getTypeOfList(field);
             InjectedValue subsetObject = injectObject(data, innerClassType,
-                    dbJoinAnnotation.table(), dbJoinAnnotation.foreignKey());
+                    dbTableGroupAnnotation.table(), dbTableGroupAnnotation.groupBy());
             //only the objects that can be mapped to a foreign key will be kept.
-            if(subsetObject.foreignKeyValue != null) {
-                foreignKeyValues.add(subsetObject.foreignKeyValue);
+            if(subsetObject.groupKeyValue != null) {
+                foreignKeyValues.add(subsetObject.groupKeyValue);
                 subsets.put(field, subsetObject);
             }
         }
@@ -329,6 +329,6 @@ public class JoinObjectInjector extends ObjectInjector{
 
     private static class InjectedValue <T> {
         T rowData;
-        String foreignKeyValue;
+        String groupKeyValue;
     }
 }

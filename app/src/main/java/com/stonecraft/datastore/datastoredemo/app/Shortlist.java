@@ -4,7 +4,7 @@
 package com.stonecraft.datastore.datastoredemo.app;
 
 import com.stonecraft.datastore.DbColumnName;
-import com.stonecraft.datastore.DbJoin;
+import com.stonecraft.datastore.DbTableGroup;
 
 import java.util.List;
 
@@ -29,7 +29,7 @@ public class Shortlist {
 	private String myAddress;
 	@DbColumnName("SHORT_LIST_JOIN.ID")
 	private Integer myJoinId;
-	@DbJoin(table = "SHORT_LIST_JOIN", foreignKey = "PROPERTY_ID")
+	@DbTableGroup(table = "SHORT_LIST_JOIN", groupBy = "PROPERTY_ID")
 	private List<ShortlistJoin> myShortlistJoins;
 
 

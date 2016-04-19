@@ -22,6 +22,7 @@ public class Query {
 	private String myHaving;
 	private String myOrderBy;
 	private int myLimit;
+	private int myOffset;
 	private String myTable;
 	private List<Join> myJoins;
 
@@ -117,6 +118,10 @@ public class Query {
 	 */
 	public int getLimit() {
 		return myLimit;
+	}
+
+	public int getOffset() {
+		return myOffset;
 	}
 
 	/**
@@ -225,6 +230,19 @@ public class Query {
 	 */
 	public Query limit(int limit) {
 		myLimit = limit;
+		return this;
+	}
+
+	/**
+	 * Offset the number of rows returned by the query.
+	 * Passing null denotes no offset clause.
+	 * This method should be used in conjunction with the limit
+	 *
+	 * @param offset
+	 * @return
+	 */
+	public Query offset(int offset) {
+		myOffset = offset;
 		return this;
 	}
 }

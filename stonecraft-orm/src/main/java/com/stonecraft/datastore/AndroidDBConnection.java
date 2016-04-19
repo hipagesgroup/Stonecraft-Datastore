@@ -107,13 +107,19 @@ public class AndroidDBConnection implements IDBConnector {
 		try {
 			Cursor cursor = null;
 			if(query.getJoins().isEmpty()){
-				String limit = query.getLimit() > 0 ?
-						String.valueOf(query.getLimit()) : null;
+				StringBuilder limit = query.getLimit() > 0 ?
+						new StringBuilder().append(query.getLimit()) : null;
+				if(query.getLimit() > 0 && query.getOffset() > 0) {
+					limit.append(" " + DBConstants.OFFSET + " ")
+                            .append(query.getOffset());
+				}
+
 				cursor = myDBOpenHelper.getReadableDatabase().query(
 					query.isdistinct(), query.getTable(), query.getColumns(),
 					query.getWhereClause(),
 					getArguments(query.getSelectionArgs()), query.getGroupBy(),
-					query.getHaving(), query.getOrderBy(), limit);
+					query.getHaving(), query.getOrderBy(), limit == null ? null : limit.toString());
+
 			} else {
 				String queryString = getSQLJoinQuery(query);
 				cursor = myDBOpenHelper.getReadableDatabase().rawQuery(queryString, null);
@@ -250,7 +256,7 @@ public class AndroidDBConnection implements IDBConnector {
 					"The table " + tableName + " does not exist. Please check the correct name " +
 							"in the database xml");
 			exception.setStackTrace(e.getStackTrace());
-			throw exception;
+			return null;
 		}
 	}
 
@@ -447,6 +453,9 @@ public class AndroidDBConnection implements IDBConnector {
 		if(query.getLimit() > 0){
 			statementBuilder.append(" " + DBConstants.LIMIT + " " + query.getLimit());
 		}
+        if(query.getLimit() > 0 && query.getOffset() > 0) {
+            statementBuilder.append(" " + DBConstants.OFFSET + " " + query.getOffset());
+        }
 		
 		return statementBuilder.toString();
 	}

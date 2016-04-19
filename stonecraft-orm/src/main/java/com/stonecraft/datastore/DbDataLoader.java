@@ -1,6 +1,7 @@
 package com.stonecraft.datastore;
 
 import android.content.Context;
+import android.net.Uri;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.os.CancellationSignal;
 import android.support.v4.os.OperationCanceledException;
@@ -82,11 +83,25 @@ public class DbDataLoader<T> extends AsyncTaskLoader<T> {
         }
     }
 
+    public void ignoreUpdates(){
+        getContext().getContentResolver().unregisterContentObserver(myObserver);
+    }
+
+    public void receiveUpdates(){
+        Datastore ds = Datastore.getDataStore(myDbName);
+        if(isStarted() && !TextUtils.isEmpty(ds.getTableUri(
+                myQuery.getTable()).toString())) {
+            getContext().getContentResolver().registerContentObserver(ds.getTableUri(
+                    myQuery.getTable()), false, myObserver);
+        }
+    }
+
     @Override
     protected void onStartLoading() {
         Datastore ds = Datastore.getDataStore(myDbName);
-        if(!TextUtils.isEmpty(ds.getTableUri(
-                myQuery.getTable()).toString())) {
+        Uri tableUri = ds.getTableUri(
+                myQuery.getTable());
+        if(tableUri != null && !TextUtils.isEmpty(tableUri.toString())) {
             getContext().getContentResolver().registerContentObserver(ds.getTableUri(
                     myQuery.getTable()), false, myObserver);
         }

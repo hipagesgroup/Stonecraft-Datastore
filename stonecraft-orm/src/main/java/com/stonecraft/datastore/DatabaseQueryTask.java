@@ -111,11 +111,7 @@ class DatabaseQueryTask extends DatabaseTask {
 
 	private Object parseQuery(Query query, RSData data, Class classOfT) throws DatabaseException {
 
-		if(myQueryListener instanceof OnUnparsedQueryComplete) {
-			return data;
-		}
-
-		Object[] result = null;
+		Object result = null;
 		if(myQueryListener != null) {
 			result = ((OnQueryComplete)myQueryListener).parseData(data);
 		}
@@ -127,10 +123,11 @@ class DatabaseQueryTask extends DatabaseTask {
 			} else {
 				oi = new JoinObjectInjector(query);
 			}
-            return oi.inject(data, classOfT);
+			return oi.inject(data, classOfT);
 		}
 
 		data.close();
+
         return result;
 	}
 

@@ -19,7 +19,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD) 
-public @interface DbJoin {
+public @interface DbTableGroup {
 	String table();
-	String foreignKey();
+	String groupBy();
 }

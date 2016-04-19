@@ -17,7 +17,7 @@ public abstract class OnQueryComplete<T> implements QueryComplete{
 	 * @param data
 	 * @return
 	 */
-	public T[] parseData(RSData data) {
+	public <T> T[] parseData(RSData data) {
 		return null;
 	}
 

@@ -2,8 +2,8 @@ package com.stonecraft.datastore;
 
 import com.stonecraft.datastore.exceptions.DatabaseException;
 import com.stonecraft.datastore.interaction.Delete;
+import com.stonecraft.datastore.interaction.IRawStatement;
 import com.stonecraft.datastore.interaction.Insert;
-import com.stonecraft.datastore.interaction.RawStatement;
 import com.stonecraft.datastore.interaction.Statement;
 import com.stonecraft.datastore.interaction.Update;
 import com.stonecraft.datastore.interaction.UpdateTableStatement;
@@ -35,6 +35,14 @@ public class DatastoreTransaction {
      */
     public void addStatement(Statement statement) {
         myStatementList.add(statement);
+    }
+
+    /**
+     * This method removes a statement from the list of statements to be run.
+     * @param statement
+     */
+    public void removeStatement(Statement statement) {
+        myStatementList.remove(statement);
     }
 
     public int getStatementCount() {
@@ -87,8 +95,8 @@ public class DatastoreTransaction {
                     result += myConnection.update((Update) stmt);
                 } else if(stmt instanceof Delete) {
                     result += myConnection.delete((Delete) stmt);
-                } else if(stmt instanceof RawStatement) {
-                    myConnection.executeRawStatement(((RawStatement) stmt).getRawStatement());
+                } else if(stmt instanceof IRawStatement) {
+                    myConnection.executeRawStatement(((IRawStatement) stmt).getRawStatement());
                 } else if(stmt instanceof UpdateTableStatement) {
                     UpdateTableStatement updateTableStatement = (UpdateTableStatement)stmt;
                     myConnection.updateTable(

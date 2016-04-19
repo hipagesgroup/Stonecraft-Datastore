@@ -68,7 +68,7 @@ abstract class ObjectInjector {
 
         Annotation[] annotations = field.getAnnotations();
         for(Annotation annotation : annotations){
-            if(annotation instanceof DbJoin ||
+            if(annotation instanceof DbTableGroup ||
                     annotation instanceof DbTableName ||
                     annotation instanceof DbColumnName) {
                 myAnnotations.put(field, annotation);

@@ -86,7 +86,7 @@ public class ContentValueCreator {
         } else if (value instanceof Integer) {
             cv.put(columnName, (Integer) value);
         } else if (value instanceof Boolean) {
-            cv.put(columnName, (Boolean) value);
+            cv.put(columnName, ((Boolean) value) ? 1 : 0);
         } else if (value instanceof Double) {
             cv.put(columnName, (Double) value);
         } else if (value instanceof Float) {

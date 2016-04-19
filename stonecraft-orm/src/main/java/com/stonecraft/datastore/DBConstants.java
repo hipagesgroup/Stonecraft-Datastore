@@ -37,6 +37,7 @@ public class DBConstants {
 	public static final String GROUP_BY = "GROUP BY";
 	public static final String HAVING = "HAVING";
 	public static final String LIMIT = "LIMIT";
+	public static final String OFFSET = "OFFSET";
 
 	public static final int NO_RECORDS_UPDATED = -1;
 

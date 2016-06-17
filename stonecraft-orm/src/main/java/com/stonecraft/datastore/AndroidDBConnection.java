@@ -133,7 +133,7 @@ public class AndroidDBConnection implements IDBConnector {
 
 	@Override
 	public long queryNumEntries(RowCountQuery query) {
-		if(query.getSelectionArgs() != null) {
+		if(query.getSelectionArgs() != null && !query.getSelectionArgs().isEmpty()) {
 			List<String> args = query.getSelectionArgs();
 			return android.database.DatabaseUtils.queryNumEntries(
 					myDBOpenHelper.getReadableDatabase(), query.getTable(), query.getWhereClause(),
@@ -586,12 +586,14 @@ public class AndroidDBConnection implements IDBConnector {
 	 * @date Date: 16/03/2012 01:50:39
 	 * @version Revision: 1.0
 	 */
-	public class QueryRSData implements RSData {
+	public static class QueryRSData implements RSData {
 		private static final int COLUMN_NOT_FOUND = -1;
 		private Cursor myCursor;
+		private Map<String, Integer> myColumnIndexes;
 
 		QueryRSData(Cursor cursor) {
 			myCursor = cursor;
+			myColumnIndexes = new HashMap<>();
 		}
 
 		@Override
@@ -727,12 +729,17 @@ public class AndroidDBConnection implements IDBConnector {
 		}		
 
 		private int getCursorIndex(String column) throws DatabaseException {
+			if(myColumnIndexes.containsKey(column)){
+				return myColumnIndexes.get(column);
+			}
 			int colIndex = myCursor.getColumnIndex(column);
 
 			if (colIndex == COLUMN_NOT_FOUND) {
 				throw new DatabaseException("The column " + column
 						+ " is not a valid column in this result set");
 			}
+
+			myColumnIndexes.put(column, colIndex);
 
 			return colIndex;
 		}

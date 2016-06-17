@@ -106,7 +106,7 @@ public class DatastoreTransaction {
                 }
             }
 
-            myConnection.commit();
+
 
             for(String tableName : updatedTableUris.keySet()) {
                 myConnection.sendTableUpdateNotification(tableName);
@@ -117,6 +117,8 @@ public class DatastoreTransaction {
         catch (DatabaseException e) {
             myConnection.rollBack();
             throw new DatabaseException("Failed to execute the transaction", e);
+        } finally {
+            myConnection.commit();
         }
     }
 }

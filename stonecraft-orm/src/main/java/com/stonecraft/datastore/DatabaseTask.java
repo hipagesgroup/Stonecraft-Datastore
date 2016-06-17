@@ -69,6 +69,11 @@ abstract class DatabaseTask extends AsyncTask<Void, Void, DatabaseException> imp
 	}
 
 	@Override
+	protected void onPreExecute() {
+		super.onPreExecute();
+	}
+
+	@Override
 	protected void onPostExecute(DatabaseException e) {
 		notifyStmtListeners(e);
 		notifyTaskListeners();
@@ -92,6 +97,11 @@ abstract class DatabaseTask extends AsyncTask<Void, Void, DatabaseException> imp
 	 * @throws DatabaseException
 	 */
 	public abstract void startTask() throws DatabaseException;
+
+	@Override
+	public boolean isTaskRunning() {
+		return getStatus() == Status.RUNNING;
+	}
 
 	abstract void notifyStmtListeners(DatabaseException e);
 }

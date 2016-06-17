@@ -21,9 +21,11 @@ public class DbDataLoader<T> extends AsyncTaskLoader<T> {
     private final ForceLoadContentObserver myObserver;
     private T myResult;
     private final String myDbName;
+    private Uri myAlternateWatchUri;
     private final Query myQuery;
     private final Class myLoaderResultType;
     private Calendar myTableUpdateTime;
+    private boolean myIsIgnoringUpdates;
 
     public DbDataLoader(Context context, String dbName, Query query, Class loaderResultType) {
         super(context);
@@ -84,28 +86,30 @@ public class DbDataLoader<T> extends AsyncTaskLoader<T> {
     }
 
     public void ignoreUpdates(){
+        myIsIgnoringUpdates = true;
         getContext().getContentResolver().unregisterContentObserver(myObserver);
     }
 
     public void receiveUpdates(){
-        Datastore ds = Datastore.getDataStore(myDbName);
-        if(isStarted() && !TextUtils.isEmpty(ds.getTableUri(
-                myQuery.getTable()).toString())) {
-            getContext().getContentResolver().registerContentObserver(ds.getTableUri(
-                    myQuery.getTable()), false, myObserver);
+        myIsIgnoringUpdates = false;
+        Uri tableUri = getWatchUri();
+        if(isStarted() && tableUri != null && !TextUtils.isEmpty(tableUri.toString())) {
+            getContext().getContentResolver().registerContentObserver(getWatchUri(), false, myObserver);
         }
+    }
+
+    public void setAlternateWatchUri(Uri uri){
+        myAlternateWatchUri = uri;
     }
 
     @Override
     protected void onStartLoading() {
-        Datastore ds = Datastore.getDataStore(myDbName);
-        Uri tableUri = ds.getTableUri(
-                myQuery.getTable());
-        if(tableUri != null && !TextUtils.isEmpty(tableUri.toString())) {
-            getContext().getContentResolver().registerContentObserver(ds.getTableUri(
-                    myQuery.getTable()), false, myObserver);
+        Uri tableUri = getWatchUri();
+        if(!myIsIgnoringUpdates && tableUri != null && !TextUtils.isEmpty(tableUri.toString())) {
+            getContext().getContentResolver().registerContentObserver(tableUri, false, myObserver);
         }
 
+        Datastore ds = Datastore.getDataStore(myDbName);
         Calendar tableUpdateTime = ds.getLastTableUpdateTime(myQuery.getTable());
         if (takeContentChanged() || myResult == null || tableUpdateTime != myTableUpdateTime ||
                 (myResult !=null && tableUpdateTime != null &&
@@ -136,5 +140,15 @@ public class DbDataLoader<T> extends AsyncTaskLoader<T> {
 
         // Ensure the loader is stopped
         onStopLoading();
+    }
+
+    private Uri getWatchUri(){
+        if(myAlternateWatchUri != null){
+            return myAlternateWatchUri;
+        }
+
+        Datastore ds = Datastore.getDataStore(myDbName);
+        return ds.getTableUri(
+                myQuery.getTable());
     }
 }

@@ -76,7 +76,7 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         getSupportLoaderManager().initLoader(0, null, this);
-        populateTables();
+//        populateTables();
         myTxbStatus = (TextView)findViewById(R.id.txbStatus);
 
         Button btnClose = (Button)findViewById(R.id.btnClose);
@@ -254,26 +254,21 @@ public class MainActivity extends AppCompatActivity
 
     private void query() {
         Datastore ds = Datastore.getDataStore(DB_NAME);
-
+        long millis = Calendar.getInstance().getTimeInMillis();
         Log.d("PERFORMANCETEST",
                 "Query performance test start");
         final long start = Calendar.getInstance().getTimeInMillis();
         Query query = new Query("SHORT_LIST");
-        ds.executeQuery(0, query, new OnQueryComplete<Shortlist>() {
-
-            @Override
-            public void onQueryComplete(int token, Shortlist[] resultSet) {
-                Log.d("PERFORMANCETEST",
-                        "Query of " + resultSet.length + " records took " +
-                                (Calendar.getInstance().getTimeInMillis() - start));
-            }
-
-            @Override
-            public void onQueryFailed(int token, DatabaseException e) {
-                Log.d("PERFORMANCETEST",
-                        "Query performance test failed [" + e + "]");
-            }
-        });
+        Shortlist[] resultSet = new Shortlist[0];
+        try {
+            resultSet = ds.executeQuery(query, Shortlist.class);
+        } catch (DatabaseException e) {
+            e.printStackTrace();
+        }
+        Log.d("PERFORMANCETEST",
+                "Query of " + resultSet.length + " records took " +
+                        (Calendar.getInstance().getTimeInMillis() - start));
+        Log.d("TEST", "Time to query = " + (Calendar.getInstance().getTimeInMillis() - millis));
     }
 
     private void displayPhoto() {
@@ -520,30 +515,26 @@ public class MainActivity extends AppCompatActivity
 
     private void insert() {
 
+        long millis = Calendar.getInstance().getTimeInMillis();
         Datastore ds = Datastore.getDataStore(DB_NAME);
+        DatastoreTransaction dt = new DatastoreTransaction();
 
-        Shortlist shortlist = new Shortlist();
-        shortlist.setIsFavourite(true);
-        shortlist.setAddress("This is the property address");
-        shortlist.setPostcode(2079);
-        Insert<Shortlist> insert = new Insert("SHORT_LIST", shortlist);
-        ds.executeNonQuery(1, insert, new OnNonQueryComplete() {
+        for(int i = 0; i < 25000; i++) {
+            Shortlist shortlist = new Shortlist();
+            shortlist.setIsFavourite(true);
+            shortlist.setAddress("This is the property address");
+            shortlist.setPostcode(2079);
+            Insert<Shortlist> insert = new Insert("SHORT_LIST", shortlist);
+            dt.addStatement(insert);
+        }
 
-            @Override
-            public void onNonQueryComplete(int token, int updated) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        myTxbStatus.setText("Insert Successful");
-                    }
-                });
-            }
+        try {
+            dt.executeOnCurrentThread(ds);
+            Log.d("TEST", "Time to save = " + (Calendar.getInstance().getTimeInMillis() - millis));
+        } catch (DatabaseException e) {
+            e.printStackTrace();
+        }
 
-            @Override
-            public void onNonQueryFailed(int token, DatabaseException e) {
-
-            }
-        });
     }
 
     final Handler returnHandler = new Handler(new Handler.Callback() {

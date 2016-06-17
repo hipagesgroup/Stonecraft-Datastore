@@ -55,6 +55,8 @@ public class Datastore implements OnTaskCompleteListener {
 
 	private volatile static Map<String, IDBConnector> myDBConnections;
 	private volatile static List<DatabaseTask> myQueuedTasks;
+	private volatile static Map<String, Map<Class, QueryDeserializer>> myDeserializers =
+			new HashMap<String, Map<Class, QueryDeserializer>>();
 	private IDBConnector myActiveDatabase;
 	private boolean myTasksQueued = true;
 	private boolean myBlockingCall = false;
@@ -273,6 +275,44 @@ public class Datastore implements OnTaskCompleteListener {
 	}
 
 	/**
+	 * This method is used to add a manual deserializer that will be used to deserialize a query
+	 * for any query on the passed in table.
+	 *
+	 * Multiple deserilizer's can be passed in for the same table as long as the deserilizer is
+	 * typed with different classed.
+	 *
+	 * This method can increase the performance of queries as well as create more complex data
+	 * structures.
+	 *
+	 * @param tableName
+	 * @param deserializer
+     */
+	public static void addQueryDeserializer(String tableName, QueryDeserializer deserializer){
+		Method[] methods = deserializer.getClass().getMethods();
+		Class deserializerClass = Object.class;
+		for(Method method : methods) {
+			if(method.getName().equals("parseData")) {
+				Class clazz = method.getReturnType();
+				if(!clazz.getComponentType().getName().equals(Object.class.getName())) {
+					deserializerClass = clazz.getComponentType();
+					break;
+				}
+			}
+		}
+		if(deserializerClass == null) {
+			throw new RuntimeException("The passed in deserializer has not been typed.");
+		}
+		if(myDeserializers.containsKey(tableName)) {
+			Map<Class, QueryDeserializer> deserializerMap = myDeserializers.get(tableName);
+			deserializerMap.put(deserializerClass, deserializer);
+		} else {
+			Map<Class, QueryDeserializer> deserializerMap = new HashMap<>();
+			deserializerMap.put(deserializerClass, deserializer);
+			myDeserializers.put(tableName, deserializerMap);
+		}
+	}
+
+	/**
 	 * This method executes a query on the database and returns the resultant
 	 * RSData object. If an error occurs a DatabaseException is passed back in
 	 * the listener. The listener can be null, but if an exception occurs this
@@ -309,12 +349,16 @@ public class Datastore implements OnTaskCompleteListener {
 		catch (DatabaseException e) {
 			listener.onQueryFailed(token, e);
 		}
-		
+
+
 		int taskId = new AtomicInteger().incrementAndGet();
 		DatabaseQueryTask task = new DatabaseQueryTask(taskId, token,
 				this, stmt);
 		task.setOnQueryCompleteListener(listener);
 		task.setInjectorClass(injectorClass);
+
+		QueryDeserializer queryDeserializer = getQueryDeserializer(stmt, injectorClass);
+		task.setQueryDeserializer(queryDeserializer);
 
 		try {
 			executeStmt(task);
@@ -323,7 +367,7 @@ public class Datastore implements OnTaskCompleteListener {
 		}
 	}
 
-    /**
+	/**
      * This method executes a query on the database and returns the resultant
      * RSData object. This method will always block the calling thread
      * regardless if this object has been set to block or not.
@@ -339,9 +383,13 @@ public class Datastore implements OnTaskCompleteListener {
 				+ "Ensure a connection to the database is currently valid and open");
 		}
 
+
 		int taskId = new AtomicInteger().incrementAndGet();
 		DatabaseQueryTask task = new DatabaseQueryTask(taskId, DEFAULT_TOKEN,
 				this, stmt);
+
+		QueryDeserializer queryDeserializer = getQueryDeserializer(stmt, classToInject);
+		task.setQueryDeserializer(queryDeserializer);
 		
 		return task.startTask(classToInject);
 	}
@@ -488,7 +536,7 @@ public class Datastore implements OnTaskCompleteListener {
 
 						if (!values.isEmpty()) {
 							Update update = new Update(insert.getTable(),
-									values, whereClause, null);
+									values).whereClause(whereClause);
 							updateOrAddStmt = update;
 
 						}
@@ -673,9 +721,25 @@ public class Datastore implements OnTaskCompleteListener {
 		synchronized (myQueuedTasks) {
 			myQueuedTasks.remove(task);
 
-			if (myQueuedTasks.size() > 0) {
-				myQueuedTasks.get(0).execute();
+			if (myQueuedTasks.size() > 0 ) {
+				if(myQueuedTasks.get(0).isTaskRunning()) {
+					onTaskComplete(myQueuedTasks.get(0));
+				} else {
+					myQueuedTasks.get(0).execute();
+				}
 			}
 		}
+	}
+
+	@Nullable
+	private QueryDeserializer getQueryDeserializer(Query stmt, Class injectorClass) {
+		QueryDeserializer queryDeserializer = null;
+		if(myDeserializers.containsKey(stmt.getTable())) {
+			Map<Class, QueryDeserializer> tableDeserializers = myDeserializers.get(stmt.getTable());
+			if(tableDeserializers.containsKey(injectorClass)) {
+				queryDeserializer = tableDeserializers.get(injectorClass);
+			}
+		}
+		return queryDeserializer;
 	}
 }

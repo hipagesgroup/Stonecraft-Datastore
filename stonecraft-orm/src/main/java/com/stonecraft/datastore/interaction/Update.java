@@ -20,12 +20,9 @@ public class Update<T> extends Statement {
 	private List<String> myArguments;
 	private T myUpdateClass;
 
-	public Update(String tableName, Map<String, Object> values,
-						 String whereClause, List<String> whereArgs) {
+	public Update(String tableName, Map<String, Object> values) {
 		super(tableName);
 		myValues = values;
-		myWhereClause = whereClause;
-		myArguments = whereArgs;
 	}
 
 	public Update (String tableName, T updateClass) {

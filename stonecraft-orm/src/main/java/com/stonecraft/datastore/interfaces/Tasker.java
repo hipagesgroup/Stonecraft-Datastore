@@ -41,4 +41,6 @@ public interface Tasker {
 	 * @return
 	 */
 	public int getToken();
+
+	boolean isTaskRunning();
 }

@@ -21,6 +21,7 @@ class DatabaseQueryTask extends DatabaseTask {
 	private QueryComplete myQueryListener;
 	private Class myInjectorClass;
 	private Object myResult;
+	private QueryDeserializer myQueryDeserializer;
 
 	public DatabaseQueryTask(int taskId, int token, Datastore datastore,
 			Query query) {
@@ -47,10 +48,17 @@ class DatabaseQueryTask extends DatabaseTask {
 		} else {
 
 		}
-
 	}
 
-    /**
+	public QueryDeserializer getQueryDeserializer() {
+		return myQueryDeserializer;
+	}
+
+	public void setQueryDeserializer(QueryDeserializer queryDeserializer) {
+		myQueryDeserializer = queryDeserializer;
+	}
+
+	/**
      * This method queries the data base and parses the data into an instance of the class that
      * is passed in.
      * @param classOfT
@@ -118,12 +126,16 @@ class DatabaseQueryTask extends DatabaseTask {
 
 		ObjectInjector oi;
 		if(result == null) {
-			if(query.getJoins().isEmpty()) {
-				oi = new QueryObjectInjector(query);
+			if(myQueryDeserializer != null) {
+				result = myQueryDeserializer.parseData(data);
 			} else {
-				oi = new JoinObjectInjector(query);
+				if(query.getJoins().isEmpty()) {
+					oi = new QueryObjectInjector(query);
+				} else {
+					oi = new JoinObjectInjector(query);
+				}
+				result = oi.inject(data, classOfT);
 			}
-			return oi.inject(data, classOfT);
 		}
 
 		data.close();

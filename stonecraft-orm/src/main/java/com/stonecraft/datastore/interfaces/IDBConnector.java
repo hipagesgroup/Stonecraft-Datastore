@@ -143,7 +143,6 @@ public interface IDBConnector {
 	 * This method executes an sql statement without any sort of validation
 	 * 
 	 * @param stmt
-	 * @return
 	 * @throws DatabaseException
 	 */
 	public void executeRawStatement(String stmt) throws DatabaseException;

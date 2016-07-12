@@ -93,7 +93,6 @@ abstract class DatabaseTask extends AsyncTask<Void, Void, DatabaseException> imp
 	 * This method executes the task, and returns the result of the statement in
 	 * a RSData object
 	 * 
-	 * @return
 	 * @throws DatabaseException
 	 */
 	public abstract void startTask() throws DatabaseException;

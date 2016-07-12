@@ -42,7 +42,7 @@ public class ContentValueCreator {
                     annotation = field.getAnnotation(DbColumnName.class);
                     myAnnotations.put(field, annotation);
                 }
-                if(annotation instanceof DbColumnName) {
+                if(annotation!= null && !annotation.isQueryOnly()) {
                     field.setAccessible(true);
                     String column = annotation.value();
                     Object value = field.get(object);

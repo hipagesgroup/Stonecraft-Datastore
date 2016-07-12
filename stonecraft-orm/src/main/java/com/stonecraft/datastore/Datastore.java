@@ -3,7 +3,6 @@ package com.stonecraft.datastore;
 import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.stonecraft.datastore.exceptions.DatabaseException;
@@ -188,7 +187,7 @@ public class Datastore implements OnTaskCompleteListener {
      * @throws DatabaseException
      */
 	public synchronized static void createConnection(final Context context, final InputStream databaseXml,
-			@Nullable final OnConnectionCreated listener)
+			final OnConnectionCreated listener)
 			throws DatabaseException {
         myParsingCount.incrementAndGet();
         if (myParsingLatch == null || myParsingLatch.getCount() == 0) {
@@ -731,7 +730,6 @@ public class Datastore implements OnTaskCompleteListener {
 		}
 	}
 
-	@Nullable
 	private QueryDeserializer getQueryDeserializer(Query stmt, Class injectorClass) {
 		QueryDeserializer queryDeserializer = null;
 		if(myDeserializers.containsKey(stmt.getTable())) {

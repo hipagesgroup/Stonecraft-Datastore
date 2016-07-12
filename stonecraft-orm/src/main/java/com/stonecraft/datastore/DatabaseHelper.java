@@ -4,7 +4,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.stonecraft.datastore.exceptions.DatabaseException;
@@ -36,7 +35,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	private OnConnectionCreated myConnectionCreatedListener;
 
 	protected DatabaseHelper(Context context,
-		AndroidDBConnection connection, DbSchemaModel schema, @Nullable final OnConnectionCreated listener) {
+		AndroidDBConnection connection, DbSchemaModel schema, final OnConnectionCreated listener) {
 		super(context, schema.getName() + Datastore.DB_EXTENSION, null, schema.getVersion());
 		myVersion = schema.getVersion();
 		myDBSchema = schema;

@@ -1,5 +1,7 @@
 package com.stonecraft.datastore;
 
+import android.database.SQLException;
+
 import com.stonecraft.datastore.exceptions.DatabaseException;
 import com.stonecraft.datastore.interaction.Delete;
 import com.stonecraft.datastore.interaction.IRawStatement;
@@ -81,44 +83,41 @@ public class DatastoreTransaction {
     }
 
     int run() throws DatabaseException {
-        try {
-            Map<String, String> updatedTableUris = new HashMap<>();
-            int result = 0;
-            myConnection.startTransaction();
-            for(Statement stmt : myStatementList) {
+
+        Map<String, String> updatedTableUris = new HashMap<>();
+        int result = 0;
+        myConnection.startTransaction();
+        for(Statement stmt : myStatementList) {
+            try {
                 updatedTableUris.put(stmt.getTable(), stmt.getTable());
 
-                if(stmt instanceof Insert) {
+                if (stmt instanceof Insert) {
                     myConnection.insert((Insert) stmt);
                     result += 1;
-                } else if(stmt instanceof Update) {
+                } else if (stmt instanceof Update) {
                     result += myConnection.update((Update) stmt);
-                } else if(stmt instanceof Delete) {
+                } else if (stmt instanceof Delete) {
                     result += myConnection.delete((Delete) stmt);
-                } else if(stmt instanceof IRawStatement) {
+                } else if (stmt instanceof IRawStatement) {
                     myConnection.executeRawStatement(((IRawStatement) stmt).getRawStatement());
-                } else if(stmt instanceof UpdateTableStatement) {
-                    UpdateTableStatement updateTableStatement = (UpdateTableStatement)stmt;
+                } else if (stmt instanceof UpdateTableStatement) {
+                    UpdateTableStatement updateTableStatement = (UpdateTableStatement) stmt;
                     myConnection.updateTable(
-                            updateTableStatement.getOldTable(), updateTableStatement.getNewTable());
+                            updateTableStatement.getOldTable(),
+                            updateTableStatement.getNewTable());
                 } else {
                     result += myConnection.doesTableExist(stmt.getTable());
                 }
+            } catch (DatabaseException | SQLException e) {
+                    myConnection.rollBack();
+                    throw new DatabaseException("Failed to execute the transaction " + stmt.toString(), e);
             }
-
-
-
-            for(String tableName : updatedTableUris.keySet()) {
-                myConnection.sendTableUpdateNotification(tableName);
-            }
-
-            return result;
         }
-        catch (DatabaseException e) {
-            myConnection.rollBack();
-            throw new DatabaseException("Failed to execute the transaction", e);
-        } finally {
+
+        for(String tableName : updatedTableUris.keySet()) {
+            myConnection.sendTableUpdateNotification(tableName);
+        }
             myConnection.commit();
-        }
+        return result;
     }
 }

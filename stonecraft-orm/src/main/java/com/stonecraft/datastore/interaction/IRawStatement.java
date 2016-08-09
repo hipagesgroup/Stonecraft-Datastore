@@ -14,4 +14,9 @@ public abstract class IRawStatement extends Statement {
     }
 
     public abstract String getRawStatement();
+
+    @Override
+    public String toString() {
+        return getTable() + " " + getRawStatement();
+    }
 }

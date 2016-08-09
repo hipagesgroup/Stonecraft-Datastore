@@ -81,4 +81,9 @@ public class Delete extends Statement {
 		myArguments.add(arg);
 		return this;
 	}
+
+	@Override
+	public String toString() {
+		return myWhereClause;
+	}
 }

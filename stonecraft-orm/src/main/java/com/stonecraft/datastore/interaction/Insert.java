@@ -1,5 +1,7 @@
 package com.stonecraft.datastore.interaction;
 
+import android.text.TextUtils;
+
 import java.util.Map;
 
 /**
@@ -32,5 +34,21 @@ public class Insert<T> extends Statement {
 
 	public T getInsertRowClasses() {
 		return myRowObject;
+	}
+
+	@Override
+	public String toString() {
+		if(myValues != null) {
+			StringBuilder sb = new StringBuilder();
+			for(Map.Entry<String, Object> entry : myValues.entrySet()) {
+				if(!TextUtils.isEmpty(sb.toString())){
+					sb.append(", ");
+				}
+				sb.append(entry.getKey() + " " + entry.getValue());
+			}
+			return myValues.toString();
+		} else {
+			return myRowObject.toString();
+		}
 	}
 }

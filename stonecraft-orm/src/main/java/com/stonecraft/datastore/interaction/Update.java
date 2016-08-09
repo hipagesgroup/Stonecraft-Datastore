@@ -1,5 +1,7 @@
 package com.stonecraft.datastore.interaction;
 
+import android.text.TextUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -83,5 +85,21 @@ public class Update<T> extends Statement {
 	public Update addArgument(String arg) {
 		myArguments.add(arg);
 		return this;
+	}
+
+	@Override
+	public String toString() {
+		if(myValues != null) {
+			StringBuilder sb = new StringBuilder();
+			for(Map.Entry<String, Object> entry : myValues.entrySet()) {
+				if(!TextUtils.isEmpty(sb.toString())){
+					sb.append(", ");
+				}
+				sb.append(entry.getKey() + " " + entry.getValue());
+			}
+			return myValues.toString();
+		} else {
+			return myUpdateClass.toString();
+		}
 	}
 }

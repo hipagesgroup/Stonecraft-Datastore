@@ -3,6 +3,7 @@ package com.stonecraft.datastore;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.support.annotation.Nullable;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.os.CancellationSignal;
@@ -28,6 +29,7 @@ public class DbDataLoader<T> extends AsyncTaskLoader<T> {
     private final Class myLoaderResultType;
     private Calendar myTableUpdateTime;
     private boolean myIsIgnoringUpdates;
+    private AsyncTask.Status myStatus = AsyncTask.Status.PENDING;
 
     public DbDataLoader(Context context, String dbName, Query query, Class loaderResultType) {
         super(context);
@@ -37,6 +39,10 @@ public class DbDataLoader<T> extends AsyncTaskLoader<T> {
         myDbName = dbName;
         myQuery = query;
         myLoaderResultType = loaderResultType;
+    }
+
+    public AsyncTask.Status getStatus() {
+        return myStatus;
     }
 
     @Override
@@ -79,6 +85,7 @@ public class DbDataLoader<T> extends AsyncTaskLoader<T> {
 
     @Override
     public void deliverResult(T result) {
+        myStatus = AsyncTask.Status.FINISHED;
         if (isReset()) {
             myResult = null;
             return;
@@ -173,6 +180,18 @@ public class DbDataLoader<T> extends AsyncTaskLoader<T> {
         // Attempt to cancel the current load task if possible.
         cancelLoad();
         unregisterContentObservers();
+    }
+
+    @Override
+    protected void onForceLoad() {
+        super.onForceLoad();
+        myStatus = AsyncTask.Status.RUNNING;
+    }
+
+    @Override
+    protected boolean onCancelLoad() {
+        myStatus = AsyncTask.Status.FINISHED;
+        return super.onCancelLoad();
     }
 
     @Override

@@ -27,7 +27,7 @@ import java.util.Map;
  * @date Date: 16/03/2012 01:50:39
  * @version Revision: 1.0
  */
-abstract class ObjectInjector {
+public abstract class ObjectInjector {
 
     private Query myQuery;
     private Map<Class, Field[]> myClassFields;

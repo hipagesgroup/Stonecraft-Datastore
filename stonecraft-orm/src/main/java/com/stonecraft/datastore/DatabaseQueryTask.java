@@ -9,7 +9,7 @@ import com.stonecraft.datastore.interfaces.IDBConnector;
  * This class is used for tasks that are to be run on a database. It handles
  * whether the task is to be run on a separate thread and notifies any listeners
  * on completion.
- * 
+ *
  * @author Michael Delaney
  * @author $Author: michael.delaney $
  * @created 16/03/2012
@@ -37,7 +37,7 @@ class DatabaseQueryTask extends DatabaseTask {
 	 * This method executes the task, and returns the result to a listener that has been
      * set using setOnQueryCompleteListener(). This method also expects that you have set
      * the Injector class via setInjectorClass().
-	 * 
+	 *
 	 * @return
 	 * @throws DatabaseException
 	 */
@@ -124,19 +124,19 @@ class DatabaseQueryTask extends DatabaseTask {
 			result = ((OnQueryComplete)myQueryListener).parseData(data);
 		}
 
-		ObjectInjector oi;
 		if(result == null) {
-			if(myQueryDeserializer != null) {
-				result = myQueryDeserializer.parseData(data);
-			} else {
-				if(query.getJoins().isEmpty()) {
-					oi = new QueryObjectInjector(query);
-				} else {
-					oi = new JoinObjectInjector(query);
-				}
-				result = oi.inject(data, classOfT);
-			}
-		}
+            final ObjectInjector oi;
+            if (query.getJoins().isEmpty()) {
+                oi = new QueryObjectInjector(query);
+            } else {
+                oi = new JoinObjectInjector(query);
+            }
+            if (myQueryDeserializer != null) {
+                result = myQueryDeserializer.parseData(data, oi);
+            } else {
+                result = oi.inject(data, classOfT);
+            }
+        }
 
 		data.close();
 
@@ -147,7 +147,7 @@ class DatabaseQueryTask extends DatabaseTask {
 	/**
 	 * This method adds a listener that will be notified when this statement has
 	 * completed.
-	 * 
+	 *
 	 * @param listener
 	 */
 	public void setOnQueryCompleteListener(OnQueryComplete listener) {

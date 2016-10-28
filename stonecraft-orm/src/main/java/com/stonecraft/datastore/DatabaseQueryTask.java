@@ -71,12 +71,12 @@ class DatabaseQueryTask extends DatabaseTask {
 		RSData data = null;
         try {
 			IDBConnector connector = myDatastore.getActiveDatabase();
-            if (myQuery instanceof Query) {
+			if (myQuery instanceof RawSQLQuery) {
+				data = connector.executeRawQuery((((RawSQLQuery) myQuery)).getQuery());
+				return (T[]) parseQuery((RawSQLQuery) myQuery, data, classOfT);
+			}else if (myQuery instanceof Query) {
                 data = connector.query((Query)myQuery);
                 return (T[])parseQuery((Query)myQuery, data, classOfT);
-            } else if (myQuery instanceof RawSQLQuery) {
-                data = connector.executeRawQuery((((RawSQLQuery)myQuery)).getQuery());
-                return (T[])parseQuery((RawSQLQuery)myQuery, data, classOfT);
             } else {
                 throw new DatabaseException("Unknown statement type "
                         + myQuery.getClass().getSimpleName()

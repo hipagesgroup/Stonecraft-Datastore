@@ -122,7 +122,12 @@ public class AndroidDBConnection implements IDBConnector {
 
 			} else {
 				String queryString = getSQLJoinQuery(query);
-				cursor = myDBOpenHelper.getReadableDatabase().rawQuery(queryString, null);
+				String[] args = null;
+				List<String> listArgs = query.getSelectionArgs();
+				if(listArgs != null && !listArgs.isEmpty()) {
+					args = listArgs.toArray(new String[listArgs.size()]);
+				}
+				cursor = myDBOpenHelper.getReadableDatabase().rawQuery(queryString, args);
 			}
 
 			return new QueryRSData(cursor);

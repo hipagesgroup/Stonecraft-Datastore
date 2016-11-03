@@ -33,7 +33,7 @@ public class ContentValueCreator {
         ContentValues cv = new ContentValues();
         try {
             if(myClassFields == null) {
-                myClassFields = object.getClass().getDeclaredFields();
+                myClassFields = DatabaseUtils.getFieldsFromClass(object.getClass());
             }
 
             for(Field field : myClassFields) {

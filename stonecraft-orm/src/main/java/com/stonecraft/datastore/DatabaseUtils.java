@@ -10,6 +10,9 @@ package com.stonecraft.datastore;
  * @version 1.0
  *
  */
+
+import java.lang.reflect.Field;
+
 /**
  * 
  * This class contains static utility methods for use with a database.
@@ -27,6 +30,37 @@ public class DatabaseUtils {
 	 * Private so an instance can't be created
 	 */
 	private DatabaseUtils() {
+	}
+
+	/**
+	 * This method returns the fields found in the passed in class.
+	 * This method will also return the fields from the passed in classes super class
+	 *
+	 * @param klass
+	 * @return
+	 */
+	public static Field[] getFieldsFromClass(Class klass) {
+		Field[] allFields = null;
+		Class currentKlass = klass;
+		do {
+			Field[] fields = currentKlass.getDeclaredFields();
+			if(allFields != null) {
+				if(fields.length > 0) {
+					int aLen = allFields.length;
+					int bLen = fields.length;
+					Field[] newFieldsArray = new Field[aLen+bLen];
+					System.arraycopy(allFields, 0, newFieldsArray, 0, aLen);
+					System.arraycopy(fields, 0, newFieldsArray, aLen, bLen);
+					fields = newFieldsArray;
+				} else {
+					fields = allFields;
+				}
+			}
+
+			allFields = fields;
+		} while((currentKlass = currentKlass.getSuperclass()) != null);
+
+		return allFields;
 	}
 
 	/**

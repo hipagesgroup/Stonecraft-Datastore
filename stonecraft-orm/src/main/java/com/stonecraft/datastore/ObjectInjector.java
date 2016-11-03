@@ -92,7 +92,7 @@ public abstract class ObjectInjector {
         if(myClassFields.containsKey(klass)) {
             fields = myClassFields.get(klass);
         } else {
-            fields = klass.getDeclaredFields();
+            fields = DatabaseUtils.getFieldsFromClass(klass);
             myClassFields.put(klass, fields);
         }
 

@@ -61,7 +61,7 @@ public class AndroidDBConnection implements IDBConnector {
 	private Map<Class, ContentValueCreator> myContentValueCreator;
 
 	public AndroidDBConnection(Context context, DbSchemaModel dbSchema,
-			OnConnectionCreated listener) {
+			OnConnectionListener listener) {
 		myAppContext = context;
 		myDbSchema = dbSchema;
 		myDBOpenHelper = new DatabaseHelper(context, this, myDbSchema, listener);
@@ -96,7 +96,7 @@ public class AndroidDBConnection implements IDBConnector {
 	}
 
 	public void close() {
-		myDBOpenHelper.getReadableDatabase().close();
+		myDBOpenHelper.close();
 	}
 
 	public boolean isOpen() throws DatabaseException {

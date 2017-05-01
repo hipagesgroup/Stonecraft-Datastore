@@ -4,7 +4,7 @@ import android.app.Application;
 import android.util.Log;
 
 import com.stonecraft.datastore.Datastore;
-import com.stonecraft.datastore.OnConnectionCreated;
+import com.stonecraft.datastore.OnConnectionListener;
 import com.stonecraft.datastore.exceptions.DatabaseException;
 
 import java.io.IOException;
@@ -24,10 +24,25 @@ public class DatastoreApplication extends Application {
     private void connectToDB() {
         try {
             Datastore.createConnection(this, getAssets().open("database.xml"),
-                    new OnConnectionCreated() {
+                    new OnConnectionListener() {
                         @Override
                         public void OnConnectionCreated(Datastore datastore) {
                             Log.d("TEST", datastore.getTableUri("SHORT_LIST").toString());
+                        }
+
+                        @Override
+                        public void onUpgrade(Datastore datastore) {
+
+                        }
+
+                        @Override
+                        public void onOpen(Datastore datastore) {
+
+                        }
+
+                        @Override
+                        public void onClose() {
+
                         }
                     });
         } catch(IOException e)

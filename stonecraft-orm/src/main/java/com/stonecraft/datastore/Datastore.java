@@ -187,7 +187,7 @@ public class Datastore implements OnTaskCompleteListener {
      * @throws DatabaseException
      */
 	public synchronized static void createConnection(final Context context, final InputStream databaseXml,
-			final OnConnectionCreated listener)
+			final OnConnectionListener listener)
 			throws DatabaseException {
         myParsingCount.incrementAndGet();
         if (myParsingLatch == null || myParsingLatch.getCount() == 0) {
@@ -217,9 +217,16 @@ public class Datastore implements OnTaskCompleteListener {
 			//User is opening another connection under a name that already has a connection.
 			//close this connection before open a new one under the same name
 			if(myDBConnections.containsKey(connection.getName())){
-				myDBConnections.get(connection.getName()).close();
-				myDBConnections.remove(connection.getName());
-			}
+                IDBConnector oldConnection = myDBConnections.remove(connection.getName());
+                try {
+                    if(oldConnection.isOpen()) {
+                        oldConnection.close();
+                    }
+                } catch (DatabaseException e) {
+                    Log.w(Datastore.class.getSimpleName(), "Failed to close old connection to " +
+                            "datastore with name " + connection.getName() + " [" + e + "]");
+                }
+            }
 
 			if (!myDBConnections.containsKey(connection.getName())) {
 				// This double checking ensures the same connection can't

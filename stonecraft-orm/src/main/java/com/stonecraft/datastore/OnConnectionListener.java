@@ -7,6 +7,12 @@ package com.stonecraft.datastore;
  * Author: michaeldelaney
  * Created: 23/12/15
  */
-public interface OnConnectionCreated {
+public interface OnConnectionListener {
     void OnConnectionCreated(Datastore datastore);
+
+    void onUpgrade(Datastore datastore);
+
+    void onOpen(Datastore datastore);
+
+    void onClose();
 }

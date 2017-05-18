@@ -280,6 +280,14 @@ public class Datastore implements OnTaskCompleteListener {
 		}
 	}
 
+	public void closeAndRemoveConnection() throws DatabaseException {
+		if (myActiveDatabase != null && myActiveDatabase.isOpen()) {
+			myActiveDatabase.close();
+
+			myDBConnections.remove(myActiveDatabase.getName());
+		}
+	}
+
 	/**
 	 * This method is used to add a manual deserializer that will be used to deserialize a query
 	 * for any query on the passed in table.

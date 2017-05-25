@@ -4,7 +4,7 @@ apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'maven-publish'
 
-def libVersion = '1.5.9'
+def libVersion = '1.5.12'
 
 android {
     compileSdkVersion 25
@@ -39,16 +39,7 @@ android {
 
 dependencies {
     compile 'com.android.support:support-v4:25.3.1'
-}
 
-publishing {
-    publications {
-        Publication(MavenPublication) {
-            groupId publishedGroupId
-            artifactId artifact
-            version libraryVersion
-        }
-    }
 }
 
 Properties properties = new Properties()
@@ -59,7 +50,7 @@ ext {
     bintrayName = 'stonecraft-orm'
 
     publishedGroupId = 'com.github.stimsoni9'
-    libraryName = 'stonecraftORM'
+    libraryName = 'stonecraft-orm'
     artifact = 'stonecraft-orm'
 
     libraryDescription = 'A datastore library for use with android'
@@ -99,6 +90,43 @@ artifacts {
     archives sourcesJar
 }
 
+install {
+    repositories.mavenInstaller {
+        // This generates POM.xml with proper parameters
+        pom.project {
+            packaging 'aar'
+            groupId publishedGroupId
+            artifactId artifact
+
+            // Add your description here
+            name libraryName
+            description libraryDescription
+            url siteUrl
+
+            // Set your license
+            licenses {
+                license {
+                    name licenseName
+                    url licenseUrl
+                }
+            }
+            developers {
+                developer {
+                    id developerId
+                    name developerName
+                    email developerEmail
+                }
+            }
+            scm {
+                connection gitUrl
+                developerConnection gitUrl
+                url siteUrl
+
+            }
+        }
+    }
+}
+
 bintray {
     user = properties.getProperty('bintray.user')
     key = properties.getProperty('bintray.apikey')
@@ -107,8 +135,6 @@ bintray {
 
     dryRun = false
     publish = true
-
-    publications = ['Publication']
 
     pkg {
         repo = 'maven'
@@ -140,41 +166,4 @@ bintray {
 
 group = publishedGroupId                               // Maven Group ID for the artifact
 
-install {
-    repositories.mavenInstaller {
-        // This generates POM.xml with proper parameters
-        pom {
-            project {
-                packaging 'aar'
-                groupId publishedGroupId
-                artifactId artifact
 
-                // Add your description here
-                name libraryName
-                description libraryDescription
-                url siteUrl
-
-                // Set your license
-                licenses {
-                    license {
-                        name licenseName
-                        url licenseUrl
-                    }
-                }
-                developers {
-                    developer {
-                        id developerId
-                        name developerName
-                        email developerEmail
-                    }
-                }
-                scm {
-                    connection gitUrl
-                    developerConnection gitUrl
-                    url siteUrl
-
-                }
-            }
-        }
-    }
-}

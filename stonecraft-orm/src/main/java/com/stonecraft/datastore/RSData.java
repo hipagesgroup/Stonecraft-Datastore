@@ -168,4 +168,18 @@ public interface RSData extends Iterator<RSData> {
 	 * @return
 	 */
 	public boolean hasColumn(String columnName);
+
+	/**
+	 * This method checks if the underlying Data source has been closed.
+	 *
+	 * @return
+	 */
+	public boolean isClosed();
+
+    /**
+     * This method checks the position within the current cursor.
+     *
+     * @return
+     */
+    public int getPosition();
 }

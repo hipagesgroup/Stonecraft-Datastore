@@ -610,7 +610,7 @@ public class AndroidDBConnection implements IDBConnector {
 
 		@Override
 		public boolean isAfterLast() {
-			return myCursor.getPosition() >= myCursor.getCount();
+			return myCursor.isAfterLast();
 
 		}
 
@@ -765,6 +765,16 @@ public class AndroidDBConnection implements IDBConnector {
 		@Override
 		public boolean hasColumn(String columnName) {
             return myCursor.getColumnIndex(columnName) >= 0;
+		}
+
+		@Override
+		public boolean isClosed() {
+			return myCursor.isClosed();
+		}
+
+		@Override
+		public int getPosition() {
+			return myCursor.getPosition();
 		}
 	}
 }

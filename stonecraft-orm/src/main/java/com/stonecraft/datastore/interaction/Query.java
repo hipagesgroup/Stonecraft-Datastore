@@ -13,7 +13,7 @@ import java.util.List;
  * @date $Date: 16/03/2012 01:50:39 $
  * @version $Revision: 1.0 $
  */
-public class Query {
+public class Query implements Cloneable {
 	private Boolean myIsdistinct;
 	private String[] myColumns;
 	private String myWhereClause;
@@ -30,6 +30,23 @@ public class Query {
 		myTable = tableName;
 		myArguments = new ArrayList<String>();
 		myJoins = new ArrayList<Join>();
+	}
+
+	public Query(Query query) {
+		myIsdistinct = query.myIsdistinct;
+		myColumns = query.myColumns;
+		myWhereClause = query.myWhereClause;
+		myArguments = new ArrayList(query.myArguments);
+		myGroupBy = query.myGroupBy;
+		myHaving = query.myHaving;
+		myOrderBy = query.myOrderBy;
+		myLimit = query.myLimit;
+		myOffset = query.myOffset;
+		myTable = query.myTable;
+		myJoins = new ArrayList<>(query.myJoins.size());
+		for(Join join : query.myJoins) {
+			myJoins.add(new Join(join));
+		}
 	}
 
 	/**
@@ -51,8 +68,9 @@ public class Query {
 	 *
 	 * @param join
 	 */
-	public void addJoins(Join join) {
+	public Query addJoins(Join join) {
 		myJoins.add(join);
+		return this;
 	}
 
 	/**

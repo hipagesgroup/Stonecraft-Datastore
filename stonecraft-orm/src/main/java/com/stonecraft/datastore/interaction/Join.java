@@ -44,7 +44,17 @@ public class Join {
 		myTable = table;
 		myJoinType = joinType;
 	}
-	/**
+
+    public Join(Join join) {
+	    myTable = join.myTable;
+	    myJoinType = join.myJoinType;
+        myJoinExpressions = new ArrayList<>(join.getJoinExpressions().size());
+        for(JoinExpression joinExpression : join.myJoinExpressions) {
+            myJoinExpressions.add(new JoinExpression(joinExpression));
+        }
+    }
+
+    /**
 	 * @return the table
 	 */
 	public String getTable() {
@@ -53,8 +63,9 @@ public class Join {
 	/**
 	 * @param table the table to set
 	 */
-	public void setTable(String table) {
+	public Join setTable(String table) {
 		myTable = table;
+        return this;
 	}
 	/**
 	 * @return the joinType
@@ -65,14 +76,16 @@ public class Join {
 	/**
 	 * @param joinType the joinType to set
 	 */
-	public void setJoinType(int joinType) {
+	public Join setJoinType(int joinType) {
 		myJoinType = joinType;
+        return this;
 	}
 	/**
 	 * @return the leftJoinColumn
 	 */
-	public void addJoinExpression(Pair<String, String> leftCol, Pair<String, String> rightCol) {
+	public Join addJoinExpression(Pair<String, String> leftCol, Pair<String, String> rightCol) {
 		myJoinExpressions.add(new JoinExpression(leftCol, rightCol));
+		return this;
 	}
 	
 	public List<JoinExpression> getJoinExpressions() {
@@ -87,7 +100,15 @@ public class Join {
 			myLeftColumn = leftColumn;
 			myRightColumn = rightColumn;
 		}
-		/**
+
+        public JoinExpression(JoinExpression expression) {
+            myLeftColumn = new Pair<>(expression.myLeftColumn.first,
+                    expression.myLeftColumn.second);
+            myRightColumn = new Pair<>(expression.myRightColumn.first,
+                    expression.myRightColumn.second);
+        }
+
+        /**
 		 * @return the leftColumn
 		 */
 		public Pair<String, String> getLeftColumn() {

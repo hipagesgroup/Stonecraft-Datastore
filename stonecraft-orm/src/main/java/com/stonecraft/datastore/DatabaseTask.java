@@ -15,6 +15,7 @@ abstract class DatabaseTask extends AsyncTask<Void, Void, DatabaseException> imp
 	protected Datastore myDatastore;
 	private int myTaskId;
 	private List<OnTaskCompleteListener> myTaskListeners;
+	private RuntimeException myPendingRuntimeException;
 
 	public DatabaseTask(int taskId, int token, Datastore datastore) {
 		myTaskId = taskId;
@@ -70,6 +71,7 @@ abstract class DatabaseTask extends AsyncTask<Void, Void, DatabaseException> imp
 
 	@Override
 	protected void onPreExecute() {
+		myPendingRuntimeException = new RuntimeException();
 		super.onPreExecute();
 	}
 
@@ -86,6 +88,9 @@ abstract class DatabaseTask extends AsyncTask<Void, Void, DatabaseException> imp
 			return null;
 		} catch (DatabaseException e) {
 			return e;
+		} catch (RuntimeException e) {
+			myPendingRuntimeException.initCause(e);
+			throw myPendingRuntimeException;
 		}
 	}
 

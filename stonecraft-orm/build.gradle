@@ -4,11 +4,10 @@ apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'maven-publish'
 
-def libVersion = '1.5.12'
+def libVersion = '1.6.0'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion '25.0.2'
+    compileSdkVersion 28
     resourcePrefix "stonecraft_"
 
     compileOptions {
@@ -18,8 +17,8 @@ android {
 
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion 23
-        versionCode 8
+        targetSdkVersion compileSdkVersion
+        versionCode 9
         versionName libVersion
     }
     signingConfigs {
@@ -38,7 +37,7 @@ android {
 }
 
 dependencies {
-    compile 'com.android.support:support-v4:25.3.1'
+    implementation 'androidx.appcompat:appcompat:1.0.2'
 
 }
 

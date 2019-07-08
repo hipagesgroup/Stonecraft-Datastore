@@ -4,10 +4,6 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.support.annotation.Nullable;
-import android.support.v4.content.AsyncTaskLoader;
-import android.support.v4.os.CancellationSignal;
-import android.support.v4.os.OperationCanceledException;
 
 import com.stonecraft.datastore.exceptions.DatabaseException;
 import com.stonecraft.datastore.interaction.Query;
@@ -15,6 +11,11 @@ import com.stonecraft.datastore.interaction.Query;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
+
+import androidx.annotation.Nullable;
+import androidx.core.os.CancellationSignal;
+import androidx.core.os.OperationCanceledException;
+import androidx.loader.content.AsyncTaskLoader;
 
 /**
  * Created by michaeldelaney on 18/11/15.

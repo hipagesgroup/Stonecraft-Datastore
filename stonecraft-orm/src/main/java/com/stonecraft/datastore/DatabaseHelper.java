@@ -62,6 +62,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         try {
             myDBInUse = db;
+            int value = myConnection.doesTableExist(DBConstants.TABLE_MAP);
             if (myConnection.doesTableExist(DBConstants.TABLE_MAP) == 0) {
                 DatabaseUpdater.createDataMapTables(myConnection, myDBSchema);
                 if (myConnection.doesTableExist(AndroidDBConnection.TABLE_SQLITE_MASTER) == 0) {
@@ -89,6 +90,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         super.onOpen(db);
         try {
             myDBInUse = db;
+            int value = myConnection.doesTableExist(DBConstants.TABLE_MAP);
             if (myConnection.doesTableExist(DBConstants.TABLE_MAP) == 0) {
                 DatabaseUpdater.createDataMapTables(myConnection, myDBSchema);
                 if (myConnection.doesTableExist(AndroidDBConnection.TABLE_SQLITE_MASTER) == 0) {

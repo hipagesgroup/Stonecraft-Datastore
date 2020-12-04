@@ -26,7 +26,7 @@ public class DatastoreApplication extends Application {
             Datastore.createConnection(this, getAssets().open("database.xml"),
                     new OnConnectionListener() {
                         @Override
-                        public void OnConnectionCreated(Datastore datastore) {
+                        public void onConnectionCreated(Datastore datastore) {
                             Log.d("TEST", datastore.getTableUri("SHORT_LIST").toString());
                         }
 
@@ -43,6 +43,11 @@ public class DatastoreApplication extends Application {
                         @Override
                         public void onClose() {
 
+                        }
+
+                        @Override
+                        public void closingAndCreatingNewConnection(String dbName) {
+                            Log.d("TEST", "closingAndCreatingNewConnection " + dbName);
                         }
                     });
         } catch(IOException e)

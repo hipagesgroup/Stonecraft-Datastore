@@ -32,6 +32,7 @@ import com.stonecraft.datastore.interaction.Insert;
 import com.stonecraft.datastore.interaction.Join;
 import com.stonecraft.datastore.interaction.Query;
 import com.stonecraft.datastore.interfaces.OnNonQueryComplete;
+import com.stonecraft.datastore.logs.ConnectionLog;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -160,8 +161,24 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+        Button btnTestLogs = (Button)findViewById(R.id.btnTestLogs);
+        btnTestLogs.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                testLogs();
+            }
+        });
+
 //        Uri uri = Datastore.getDataStore(DB_NAME).getTableUri("SHORT_LIST");
 //        getContentResolver().registerContentObserver(uri, true, myContentObserver);
+    }
+
+    private void testLogs() {
+        List<ConnectionLog> logs = Datastore.getConnectionLogs();
+        for(ConnectionLog log: logs) {
+            Log.d("TEST", log.toString());
+        }
     }
 
     /* (non-Javadoc)

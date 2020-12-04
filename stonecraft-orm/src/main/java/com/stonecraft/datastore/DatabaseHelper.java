@@ -53,7 +53,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         myDBInUse = null;
 
         if (myConnectionCreatedListener != null) {
-            myConnectionCreatedListener.OnConnectionCreated(
+            myConnectionCreatedListener.onConnectionCreated(
                     Datastore.getDataStore(myDBSchema.getName()));
         }
     }

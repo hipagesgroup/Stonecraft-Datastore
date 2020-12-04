@@ -58,12 +58,18 @@ public class DatastoreTransaction {
      * @param ds
      */
     public void execute(Datastore ds, OnNonQueryComplete listener) {
-        myConnection = ds.getActiveDatabase();
-        int taskId = new AtomicInteger().incrementAndGet();
-        DatabaseNonQueryTask task = new DatabaseNonQueryTask(taskId,
-                DEFAULT_TOKEN, ds, this);
-        task.addOnStmtCompleteListener(listener);
-        task.execute();
+        try {
+            ds.validateDBConnection();
+            myConnection = ds.getActiveDatabase();
+            int taskId = new AtomicInteger().incrementAndGet();
+            DatabaseNonQueryTask task = new DatabaseNonQueryTask(taskId,
+                    DEFAULT_TOKEN, ds, this);
+            task.addOnStmtCompleteListener(listener);
+            task.execute();
+        } catch (DatabaseException e) {
+            listener.onNonQueryFailed(DEFAULT_TOKEN, e);
+        }
+
     }
 
     /**
@@ -74,6 +80,7 @@ public class DatastoreTransaction {
      * @throws DatabaseException
      */
     public int executeOnCurrentThread(Datastore ds) throws DatabaseException {
+        ds.validateDBConnection();
         myConnection = ds.getActiveDatabase();
         return run();
     }

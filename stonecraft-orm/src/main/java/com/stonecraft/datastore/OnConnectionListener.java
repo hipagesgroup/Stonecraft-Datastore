@@ -8,11 +8,13 @@ package com.stonecraft.datastore;
  * Created: 23/12/15
  */
 public interface OnConnectionListener {
-    void OnConnectionCreated(Datastore datastore);
+    void onConnectionCreated(Datastore datastore);
 
     void onUpgrade(Datastore datastore);
 
     void onOpen(Datastore datastore);
 
     void onClose();
+
+    void closingAndCreatingNewConnection(String dbName);
 }

@@ -7,10 +7,10 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
 
-def libVersion = '1.7.0'
+def libVersion = '1.7.1'
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 30
     resourcePrefix "stonecraft_"
 
     compileOptions {
@@ -19,7 +19,7 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion 16
+        minSdkVersion 21
         targetSdkVersion compileSdkVersion
         versionCode 9
         versionName libVersion

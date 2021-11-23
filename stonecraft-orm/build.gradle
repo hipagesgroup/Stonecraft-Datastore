@@ -9,6 +9,10 @@ apply plugin: 'kotlin-kapt'
 
 def libVersion = '1.7.1'
 
+def getExtOrDefault(name, defaultValue) {
+    return rootProject.ext.has(name) ? rootProject.ext.get(name) : defaultValue
+}
+
 android {
     compileSdkVersion 30
     resourcePrefix "stonecraft_"
@@ -19,8 +23,8 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion 21
-        targetSdkVersion compileSdkVersion
+        minSdkVersion getExtOrDefault('minSdkVersion', 21)
+        targetSdkVersion getExtOrDefault('targetSdkVersion', 30)
         versionCode 9
         versionName libVersion
     }

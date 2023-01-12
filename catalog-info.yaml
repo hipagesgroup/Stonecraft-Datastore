@@ -1,0 +1,12 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: Stonecraft-Datastore
+  description: >-
+    
+  annotations:
+    github.com/project-slug: hipagesgroup/Stonecraft-Datastore
+spec:
+  type: service
+  lifecycle: experimental
+  owner: undefined

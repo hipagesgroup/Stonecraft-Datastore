@@ -7,6 +7,6 @@ metadata:
   annotations:
     github.com/project-slug: hipagesgroup/Stonecraft-Datastore
 spec:
-  type: service
+  type: library
   lifecycle: experimental
   owner: mobile-platform

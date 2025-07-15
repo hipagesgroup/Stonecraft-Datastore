@@ -10,4 +10,4 @@ metadata:
 spec:
   type: library
   lifecycle: experimental
-  owner: mobile-platform
+  owner: mobile-core

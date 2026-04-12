@@ -1,8 +1,8 @@
 apiVersion: backstage.io/v1alpha1
 kind: Location
 metadata:
-  name: stonecraft-datastore-apps
-  description: Applications managed within the Stonecraft-Datastore monorepo.
+  name: stonecraft-datastore
+  description: Catalog entities for Stonecraft-Datastore.
 spec:
   targets:
     - ./catalog/*.yaml

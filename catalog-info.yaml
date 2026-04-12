@@ -1,13 +1,9 @@
 apiVersion: backstage.io/v1alpha1
-kind: Component
+kind: Location
 metadata:
-  name: Stonecraft-Datastore
-  description: >-
-  tags:
-    - repo
-  annotations:
-    github.com/project-slug: hipagesgroup/Stonecraft-Datastore
+  name: stonecraft-datastore
+  description: Catalog entities for Stonecraft-Datastore.
 spec:
-  type: library
-  lifecycle: experimental
-  owner: mobile-core
+  targets:
+    - ./catalog/*.yaml
+    - ./catalog/**/*.yaml

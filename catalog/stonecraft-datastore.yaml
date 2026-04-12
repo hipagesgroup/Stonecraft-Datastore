@@ -1,0 +1,18 @@
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: stonecraft-datastore
+  title: Stonecraft Datastore
+  description: Android ORM library providing a lightweight SQLite abstraction layer for hipages mobile applications.
+  annotations:
+    github.com/project-slug: hipagesgroup/Stonecraft-Datastore
+    github.com/team-slug: mobile-core
+  tags:
+    - repo
+    - android
+    - kotlin
+    - orm
+spec:
+  domain: shared-services
+  owner: mobile-core
+  lifecycle: production

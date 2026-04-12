@@ -15,6 +15,7 @@ metadata:
     - kotlin
     - orm
     - deprecated
+    - pending-archival
 spec:
   type: library
   lifecycle: deprecated

@@ -12,7 +12,8 @@ metadata:
     - android
     - kotlin
     - orm
+    - deprecated
 spec:
   domain: shared-services
   owner: mobile-core
-  lifecycle: production
+  lifecycle: deprecated
